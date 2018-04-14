@@ -7,6 +7,20 @@
 
 namespace acio {
 
+std::string deviceName(int cardIndex, int deviceIndex = -1)
+{
+    std::stringstream name;
+    if (cardIndex > -1) {
+        name << "hw:" << cardIndex;
+        if (deviceIndex > -1) {
+            name << "," << deviceIndex;
+        }
+    } else {
+        name << "default";
+    }
+    return name.str();
+}
+
 int Alsa::countDevices()
 {
     int deviceCount = this->countAllSubDevices();
@@ -26,7 +40,7 @@ DeviceInfo Alsa::getDeviceInfo(int index)
     int deviceCount = this->countDevices();
 
     if (index < 0 || index >= deviceCount) {
-        return DeviceInfo {};
+        return DeviceInfo{};
     }
 
     int cardCount = this->countCards();
@@ -44,14 +58,12 @@ DeviceInfo Alsa::getDeviceInfo(int index)
 int Alsa::countCards()
 {
     int cardCount{ 0 };
-    int card{ -1 };
+    int cardIndex{ -1 };
     snd_ctl_t* handle{ nullptr };
 
-    while ((snd_card_next(&card) == 0) && (card != -1)) {
-        std::stringstream name;
-        name << "hw:" << card;
+    while ((snd_card_next(&cardIndex) == 0) && (cardIndex != -1)) {
 
-        if (snd_ctl_open(&handle, name.str().c_str(), 0) != 0) {
+        if (snd_ctl_open(&handle, deviceName(cardIndex).c_str(), 0) != 0) {
             continue;
         }
 
@@ -68,9 +80,8 @@ int Alsa::countCardDevices(int cardIndex)
     int subDevice{ -1 };
     snd_ctl_t* handle{ nullptr };
     std::stringstream name;
-    name << "hw:" << cardIndex;
 
-    if (snd_ctl_open(&handle, name.str().c_str(), 0) != 0) {
+    if (snd_ctl_open(&handle, deviceName(cardIndex).c_str(), 0) != 0) {
         return 0;
     }
 
@@ -96,10 +107,8 @@ int Alsa::countAllSubDevices()
 int Alsa::getAlsaDeviceIndex(int cardIndex, int deviceIndex)
 {
     snd_ctl_t* handle{ nullptr };
-    std::stringstream name;
-    name << "hw:" << cardIndex;
 
-    if (snd_ctl_open(&handle, name.str().c_str(), 0) != 0) {
+    if (snd_ctl_open(&handle, deviceName(cardIndex).c_str(), 0) != 0) {
         return -1;
     }
 
@@ -124,17 +133,10 @@ int getDeviceOutputChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int
 
     snd_pcm_info_set_stream(pcmInfo, stream);
 
-    std::stringstream name;
-    if (cardIndex > -1) {
-        name << "hw:" << cardIndex << "," << alsaDeviceIndex;
-    } else {
-        name << "default";
-    }
-
     int openMode = SND_PCM_ASYNC;
     snd_pcm_t* pHandle{ nullptr };
 
-    result = snd_pcm_open(&pHandle, name.str().c_str(), stream, openMode | SND_PCM_NONBLOCK);
+    result = snd_pcm_open(&pHandle, deviceName(cardIndex, alsaDeviceIndex).c_str(), stream, openMode | SND_PCM_NONBLOCK);
     if (result < 0) {
         return 0;
     }
@@ -152,7 +154,6 @@ int getDeviceOutputChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int
     return (result == 0 ? value : 0);
 }
 
-
 DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
 {
     DeviceInfo deviceInfo{};
@@ -160,14 +161,7 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
 
     int alsaDeviceIndex = this->getAlsaDeviceIndex(cardIndex, deviceIndex);
 
-    std::stringstream name;
-    if (cardIndex > -1) {
-        name << "hw:" << cardIndex;
-    } else {
-        name << "default";
-    }
-
-    int result = snd_ctl_open(&cHandle, name.str().c_str(), SND_CTL_NONBLOCK);
+    int result = snd_ctl_open(&cHandle, deviceName(cardIndex).c_str(), SND_CTL_NONBLOCK);
     if (result != 0) {
         return deviceInfo;
     }
@@ -175,8 +169,7 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
     deviceInfo.outputChannels = getDeviceOutputChannelCount(SND_PCM_STREAM_PLAYBACK, cHandle, cardIndex, alsaDeviceIndex);
     deviceInfo.inputChannels = getDeviceOutputChannelCount(SND_PCM_STREAM_CAPTURE, cHandle, cardIndex, alsaDeviceIndex);
 
-    snd_ctl_close( cHandle );
-
+    snd_ctl_close(cHandle);
 
     return deviceInfo;
 }

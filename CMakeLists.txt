@@ -10,13 +10,21 @@ endif(UNIX)
 set(SOURCES
             src/aio_asio.cpp
             src/aio_jack.cpp
-            src/linux/aio_alsa.cpp
             src/osx/aio_asioosx.cpp
             src/windows/aio_asiowin32.cpp
 
             include/aio_jack.h
             include/aio_audio.h
-            include/linux/aio_alsa.h)
+            )
+
+
+if(UNIX)
+    set(SOURCES
+            ${SOURCES}
+            src/linux/aio_alsa.cpp
+            include/linux/aio_alsa.h
+            )
+endif()
 
 include_directories("include")
 

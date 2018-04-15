@@ -9,6 +9,6 @@ if(LINUX)
             demo_probe.h
             probe_alsa.cpp
             )
-    add_executable(demo_alsa ${SOURCES})
+    add_executable(demo_alsa ${ALSA_SOURCES})
     target_link_libraries(demo_alsa audiocard_io ${ALSA_LIBRARIES})
 endif(LINUX)

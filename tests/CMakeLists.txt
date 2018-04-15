@@ -6,12 +6,12 @@ set(CMAKE_CXX_STANDARD 17)
 set(SOURCES
         tst_main.cpp fakeit.hpp)
 
-if(UNIX)
+if(LINUX)
     set(SOURCES
             ${SOURCES}
             tst_alsa.cpp
              )
-endif(UNIX)
+endif(LINUX)
 
 add_executable(audiocard_io_test ${SOURCES})
 target_link_libraries(audiocard_io_test audiocard_io)

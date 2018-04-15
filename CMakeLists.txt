@@ -3,9 +3,13 @@ project(audiocard_io)
 
 set(CMAKE_CXX_STANDARD 17)
 
-if (UNIX)
+if (UNIX AND NOT APPLE)
+    set(LINUX TRUE)
+endif()
+
+if (LINUX)
 find_package(ALSA REQUIRED)
-endif(UNIX)
+endif(LINUX)
 
 set(SOURCES
             src/aio_asio.cpp
@@ -18,7 +22,7 @@ set(SOURCES
             )
 
 
-if(UNIX)
+if(LINUX)
     set(SOURCES
             ${SOURCES}
             src/linux/aio_alsa.cpp

@@ -17,7 +17,7 @@ private:
     int countCards();
     int countCardDevices(int cardIndex);
     int countAllSubDevices();
-
+    bool hasDefault();
     int getAlsaDeviceIndex(int cardIndex, int deviceIndex);
 
     DeviceInfo getCardDeviceInfo(int cardIndex, int deviceIndex);

@@ -199,7 +199,6 @@ auto getDeviceSampleRates(snd_pcm_stream_t stream, int cardIndex, int deviceInde
 
     int result = snd_pcm_open(&pHandle, deviceName.c_str(), stream, openMode | SND_PCM_NONBLOCK);
     if (result < 0) {
-        std::cout << "RtApiAlsa::getDeviceInfo: snd_pcm_open error for device (" << deviceName << "), " << snd_strerror(result) << ".";
         return sampleRates;
     }
 
@@ -209,11 +208,9 @@ auto getDeviceSampleRates(snd_pcm_stream_t stream, int cardIndex, int deviceInde
     result = snd_pcm_hw_params_any(pHandle, params);
     if (result < 0) {
         snd_pcm_close(pHandle);
-        std::cout << "RtApiAlsa::getDeviceInfo: snd_pcm_hw_params error for device (" << deviceName << "), " << snd_strerror(result) << ".";
         return sampleRates;
     }
 
-    // Test our discrete set of sample rate values.
     for (unsigned int i = 0; i < MAX_SAMPLE_RATES; i++) {
         if (snd_pcm_hw_params_test_rate(pHandle, params, SAMPLE_RATES[i], 0) == 0) {
             sampleRates.push_back(SAMPLE_RATES[i]);

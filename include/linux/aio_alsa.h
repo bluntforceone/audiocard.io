@@ -1,5 +1,5 @@
-#ifndef AUDIO_IO_ALSA_H
-#define AUDIO_IO_ALSA_H
+#ifndef AUDIOCARD_IO_ALSA_H
+#define AUDIOCARD_IO_ALSA_H
 
 #include "aio_audio.h"
 
@@ -25,4 +25,4 @@ private:
 };
 }
 
-#endif //AUDIO_IO_ALSA_H
+#endif //AUDIOCARD_IO_ALSA_H

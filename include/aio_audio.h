@@ -1,5 +1,5 @@
-#ifndef AUDIO_IO_AUDIO_H
-#define AUDIO_IO_AUDIO_H
+#ifndef AUDIOCARD_IO_AUDIO_H
+#define AUDIOCARD_IO_AUDIO_H
 
 #include <type_traits>
 #include <string>
@@ -43,6 +43,9 @@ struct DeviceInfo {
     std::vector<unsigned int> sampleRates;
     unsigned int preferredSampleRate;
     AudioFormat nativeFormats;
+
+    bool changeableInputChannelCount { false };
+    bool changeableOutputChannelCount { false };
 };
 
 class Audio {
@@ -57,4 +60,4 @@ public:
 inline Audio::~Audio() = default;
 }
 
-#endif //AUDIO_IO_AUDIO_H
+#endif //AUDIOCARD_IO_AUDIO_H

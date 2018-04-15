@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
     for (int index = 0; index < deviceCount; ++index) {
         auto deviceInfo = alsa.getDeviceInfo(index);
         std::cout << "--------------------" << std::endl;
+        std::cout << "name:" << deviceInfo.name << std::endl;
         std::cout << "outputChannels:" << deviceInfo.outputChannels << std::endl;
         std::cout << "inputChannels:" << deviceInfo.inputChannels << std::endl;
         std::cout << "--------------------" << std::endl;

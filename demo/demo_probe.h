@@ -17,6 +17,14 @@ void Probe()
         std::cout << "name:" << deviceInfo.name << std::endl;
         std::cout << "outputChannels:" << deviceInfo.outputChannels << std::endl;
         std::cout << "inputChannels:" << deviceInfo.inputChannels << std::endl;
+
+        for (auto iter = deviceInfo.sampleRates.begin(); iter != deviceInfo.sampleRates.end(); iter++) {
+            if (iter != deviceInfo.sampleRates.begin()) {
+                std::cout << ", ";
+            }
+            std::cout << *iter;
+        }
+        std::cout << std::endl;
         std::cout << "--------------------" << std::endl;
     }
 }

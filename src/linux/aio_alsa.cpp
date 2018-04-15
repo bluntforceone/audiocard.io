@@ -7,6 +7,14 @@
 
 namespace acio {
 
+namespace {
+    const unsigned int MAX_SAMPLE_RATES = 14;
+    const unsigned int SAMPLE_RATES[] = {
+        4000, 5512, 8000, 9600, 11025, 16000, 22050,
+        32000, 44100, 48000, 88200, 96000, 176400, 192000
+    };
+}
+
 std::string alsaDeviceName(int cardIndex, int deviceIndex = -1)
 {
     std::stringstream name;
@@ -179,6 +187,44 @@ int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardI
     return (result == 0 ? value : 0);
 }
 
+auto getDeviceSampleRates(int cardIndex, int deviceIndex)
+{
+    auto sampleRates = std::vector<unsigned int>();
+
+    auto stream = SND_PCM_STREAM_PLAYBACK;
+    int openMode = SND_PCM_ASYNC;
+
+    auto deviceName = alsaDeviceName(cardIndex, deviceIndex);
+
+    snd_pcm_t* pHandle{ nullptr };
+
+    int result = snd_pcm_open(&pHandle, deviceName.c_str(), stream, openMode | SND_PCM_NONBLOCK);
+    if (result < 0) {
+        std::cout << "RtApiAlsa::getDeviceInfo: snd_pcm_open error for device (" << deviceName << "), " << snd_strerror(result) << ".";
+        return sampleRates;
+    }
+
+    snd_pcm_hw_params_t* params;
+    snd_pcm_hw_params_alloca(&params);
+
+    result = snd_pcm_hw_params_any(pHandle, params);
+    if (result < 0) {
+        snd_pcm_close(pHandle);
+        std::cout << "RtApiAlsa::getDeviceInfo: snd_pcm_hw_params error for device (" << deviceName << "), " << snd_strerror(result) << ".";
+        return sampleRates;
+    }
+
+    // Test our discrete set of sample rate values.
+    for (unsigned int i = 0; i < MAX_SAMPLE_RATES; i++) {
+        if (snd_pcm_hw_params_test_rate(pHandle, params, SAMPLE_RATES[i], 0) == 0) {
+            sampleRates.push_back(SAMPLE_RATES[i]);
+          }
+    }
+
+    snd_pcm_close(pHandle);
+    return sampleRates;
+}
+
 DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
 {
     DeviceInfo deviceInfo{};
@@ -193,7 +239,7 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
 
     deviceInfo.outputChannels = getDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, cHandle, cardIndex, alsaDeviceIndex);
     deviceInfo.inputChannels = getDeviceChannelCount(SND_PCM_STREAM_CAPTURE, cHandle, cardIndex, alsaDeviceIndex);
-
+    deviceInfo.sampleRates = getDeviceSampleRates(cardIndex, alsaDeviceIndex);
     deviceInfo.name = cardName(cardIndex, alsaDeviceIndex);
 
     snd_ctl_close(cHandle);

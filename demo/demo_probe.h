@@ -1,21 +1,24 @@
-#include "linux/aio_alsa.h"
+#ifndef AUDIOCARD_IO_DEMO_PROBE_H
+#define AUDIOCARD_IO_DEMO_PROBE_H
+
 #include <iostream>
 
-int main(int argc, char* argv[])
+template<typename T>
+void Probe()
 {
-    acio::Alsa alsa;
+    T api;
 
-    int deviceCount = alsa.countDevices();
+    int deviceCount = api.countDevices();
     std::cout << "countDevices:" << deviceCount << std::endl;
 
     for (int index = 0; index < deviceCount; ++index) {
-        auto deviceInfo = alsa.getDeviceInfo(index);
+        auto deviceInfo = api.getDeviceInfo(index);
         std::cout << "--------------------" << std::endl;
         std::cout << "name:" << deviceInfo.name << std::endl;
         std::cout << "outputChannels:" << deviceInfo.outputChannels << std::endl;
         std::cout << "inputChannels:" << deviceInfo.inputChannels << std::endl;
         std::cout << "--------------------" << std::endl;
     }
-
-    return 0;
 }
+
+#endif //AUDIOCARD_IO_DEMO_PROBE_H

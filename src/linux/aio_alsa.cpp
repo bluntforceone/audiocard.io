@@ -187,11 +187,10 @@ int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardI
     return (result == 0 ? value : 0);
 }
 
-auto getDeviceSampleRates(int cardIndex, int deviceIndex)
+auto getDeviceSampleRates(snd_pcm_stream_t stream, int cardIndex, int deviceIndex)
 {
     auto sampleRates = std::vector<unsigned int>();
 
-    auto stream = SND_PCM_STREAM_PLAYBACK;
     int openMode = SND_PCM_ASYNC;
 
     auto deviceName = alsaDeviceName(cardIndex, deviceIndex);
@@ -237,9 +236,11 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
         return deviceInfo;
     }
 
+    auto maxChannelsStream = deviceInfo.inputChannels > deviceInfo.outputChannels ?  SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK;
+
     deviceInfo.outputChannels = getDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, cHandle, cardIndex, alsaDeviceIndex);
     deviceInfo.inputChannels = getDeviceChannelCount(SND_PCM_STREAM_CAPTURE, cHandle, cardIndex, alsaDeviceIndex);
-    deviceInfo.sampleRates = getDeviceSampleRates(cardIndex, alsaDeviceIndex);
+    deviceInfo.sampleRates = getDeviceSampleRates(maxChannelsStream, cardIndex, alsaDeviceIndex);
     deviceInfo.name = cardName(cardIndex, alsaDeviceIndex);
 
     snd_ctl_close(cHandle);

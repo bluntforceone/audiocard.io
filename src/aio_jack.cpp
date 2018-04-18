@@ -19,8 +19,10 @@
  ***************************************************************************************************/
 
 #include "aio_jack.h"
+#include "jack/jack.h"
 
 namespace acio {
+
 int Jack::countDevices()
 {
     return 1;
@@ -35,7 +37,11 @@ DeviceInfo Jack::getDeviceInfo(int index)
 
     deviceInfo.changeableInputChannelCount = true;
     deviceInfo.changeableOutputChannelCount = true;
+    deviceInfo.preferredSampleRate = jack_get_sample_rate(this->_client);
+    deviceInfo.sampleRates.push_back(deviceInfo.preferredSampleRate);
+    deviceInfo.nativeFormats = AudioFormat::FLOAT32;
 
     return deviceInfo;
 }
+
 }

@@ -23,6 +23,8 @@
 
 #include "aio_audio.h"
 
+typedef struct _jack_client jack_client_t;
+
 namespace acio {
 
 class Jack : public Audio {
@@ -32,6 +34,9 @@ public:
 public:
     int countDevices() override;
     DeviceInfo getDeviceInfo(int index) override;
+
+private:
+    jack_client_t* _client {nullptr };
 };
 }
 

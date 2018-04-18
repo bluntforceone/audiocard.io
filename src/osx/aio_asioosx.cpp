@@ -18,4 +18,15 @@
  *                                                                                                  *
  ***************************************************************************************************/
 
+#include "osx/aio_asioosx.h"
 
+namespace acio {
+
+int AsioOSx::countDevices()
+{
+}
+
+DeviceInfo AsioOSx::getDeviceInfo(int index)
+{
+}
+}

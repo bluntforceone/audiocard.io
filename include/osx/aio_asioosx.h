@@ -18,16 +18,21 @@
  *                                                                                                  *
  ***************************************************************************************************/
 
-#include "windows/aio_asiowin32.h"
+#ifndef AUDIOCARD_IO_ASIO_OSX_H
+#define AUDIOCARD_IO_ASIO_OSX_H
+
+#include "aio_audio.h"
 
 namespace acio {
 
-int AsioWin32::countDevices()
-{
-    return 0;
+class AsioOSx: public Audio {
+public:
+    ~AsioOSx() override = default;
+
+public:
+    int countDevices() override;
+    DeviceInfo getDeviceInfo(int index) override;
+};
 }
-DeviceInfo AsioWin32::getDeviceInfo(int index)
-{
-    return DeviceInfo();
-}
-}
+
+#endif //AUDIOCARD_IO_ASIO_OSX_H

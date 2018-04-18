@@ -67,6 +67,10 @@ if(ASIO)
     set(SOURCES
             ${SOURCES}
 
+            3rd_party/ASIOSDK2.3/common/asio.cpp
+            3rd_party/ASIOSDK2.3/common/asio.h
+
+
             3rd_party/ASIOSDK2.3/host/asiodrivers.h
             3rd_party/ASIOSDK2.3/host/asiodrivers.cpp
 

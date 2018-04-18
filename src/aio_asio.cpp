@@ -19,6 +19,7 @@
  ***************************************************************************************************/
 
 #include "aio_asio.h"
+#include <array>
 
 namespace acio
 {
@@ -28,6 +29,15 @@ int Asio::countDevices()
     return this->asioDrivers.asioGetNumDev();
 }
 
+DeviceInfo Asio::getDeviceInfo(int index)
+{
+    DeviceInfo deviceInfo {};
 
+    std::array<char, 32> driverName;
+    this->asioDrivers.asioGetDriverName(index, driverName.data(), 32);
 
+    deviceInfo.name = driverName.data();
+
+    return deviceInfo;
+}
 }

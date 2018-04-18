@@ -30,7 +30,7 @@ if(BUILD_COREAUDIO)
             ${SOURCES}
 
             src/osx/aio_coreaudio.cpp
-            include/osx/aio_coreaudio.cpp
+            include/osx/aio_coreaudio.h
             )
 endif()
 
@@ -95,11 +95,10 @@ if(BUILD_ASIO)
         set(SOURCES
                 ${SOURCES}
 
-                3rd_party/ASIOSDK2.3/host/mac/asiolist.cpp
-                3rd_party/ASIOSDK2.3/host/mac/asiolist.h
+                3rd_party/ASIOSDK2.3/host/mac/codefragments.hpp
+                3rd_party/ASIOSDK2.3/host/mac/codefragments.cpp
 
                 src/osx/aio_asioosx.cpp
-                include/osx/aio_asioosx.cpp
                 )
     endif()
 endif()

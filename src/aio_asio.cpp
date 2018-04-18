@@ -45,7 +45,7 @@ Asio::Asio()
 
 int Asio::countDevices()
 {
-    return this->asioDrivers.asioGetNumDev();
+    return this->driverNames.size();
 }
 
 DeviceInfo Asio::getDeviceInfo(int index)

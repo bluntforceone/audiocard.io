@@ -78,6 +78,9 @@ if(ASIO)
         set(SOURCES
                 ${SOURCES}
 
+                3rd_party/ASIOSDK2.3/host/pc/asiolist.cpp
+                3rd_party/ASIOSDK2.3/host/pc/asiolist.h
+
                 src/windows/aio_asiowin32.cpp
                 )
     endif()
@@ -85,6 +88,9 @@ if(ASIO)
         include_directories(3rd_party/ASIOSDK2.3/host/mac)
         set(SOURCES
                 ${SOURCES}
+
+                3rd_party/ASIOSDK2.3/host/mac/asiolist.cpp
+                3rd_party/ASIOSDK2.3/host/mac/asiolist.h
 
                 src/osx/aio_asioosx.cpp
                 include/osx/aio_asioosx.cpp

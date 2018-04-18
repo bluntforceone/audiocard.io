@@ -8,3 +8,6 @@ Pull requests are welcome:
   All contributions must be released to the project under the MIT license. 
 
 audiocard is licensed under the MIT license. 
+
+
+Credit where credit is due: This library is largely inspired by Gary P. Scavone's work on RtAudio.

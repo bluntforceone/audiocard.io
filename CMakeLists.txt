@@ -8,24 +8,24 @@ if (UNIX AND NOT APPLE)
 endif()
 
 if (APPLE OR WIN32)
-    set(ASIO TRUE)
+    set(BUILD_ASIO TRUE)
 endif()
 
 if (APPLE)
-    set(COREAUDIO TRUE)
+    set(BUILD_COREAUDIO TRUE)
 endif()
 
 if (LINUX)
-    set(ALSA TRUE)
-    set(JACK TRUE)
-    set(PULSE TRUE)
+    set(BUILD_ALSA TRUE)
+    set(BUILD_JACK TRUE)
+    set(BUILD_PULSE TRUE)
 endif()
 
-if (ALSA)
+if (BUILD_ALSA)
 find_package(ALSA REQUIRED)
-endif(ALSA)
+endif(BUILD_ALSA)
 
-if(COREAUDIO)
+if(BUILD_COREAUDIO)
     set(SOURCES
             ${SOURCES}
 
@@ -34,7 +34,7 @@ if(COREAUDIO)
             )
 endif()
 
-if(ALSA)
+if(BUILD_ALSA)
     set(SOURCES
             ${SOURCES}
 
@@ -44,7 +44,7 @@ if(ALSA)
 endif()
 
 
-if(PULSE)
+if(BUILD_PULSE)
     set(SOURCES
             ${SOURCES}
 
@@ -53,15 +53,17 @@ if(PULSE)
             )
 endif()
 
-if(JACK)
+if(BUILD_JACK)
     set(SOURCES
+            ${SOURCES}
+
             src/aio_jack.cpp
             include/aio_jack.h
             )
 endif()
 
 
-if(ASIO)
+if(BUILD_ASIO)
     include_directories(3rd_party/ASIOSDK2.3/host)
     include_directories(3rd_party/ASIOSDK2.3/common)
     set(SOURCES

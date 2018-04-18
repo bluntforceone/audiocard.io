@@ -7,51 +7,90 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
+if (APPLE OR WIN32)
+    set(ASIO TRUE)
+endif()
+
+if (APPLE)
+    set(COREAUDIO TRUE)
+endif()
+
 if (LINUX)
+    set(ALSA TRUE)
+    set(JACK TRUE)
+    set(PULSE TRUE)
+endif()
+
+if (ALSA)
 find_package(ALSA REQUIRED)
-endif(LINUX)
+endif(ALSA)
 
-set(SOURCES
-            src/aio_asio.cpp
-            src/aio_jack.cpp
-
-            include/aio_asio.h
-            include/aio_audio.h
-            include/aio_jack.h
-        )
-
-if(APPLE)
+if(COREAUDIO)
     set(SOURCES
             ${SOURCES}
 
-            src/osx/aio_asioosx.cpp
             src/osx/aio_coreaudio.cpp
-
-            include/osx/aio_asioosx.cpp
             include/osx/aio_coreaudio.cpp
-
             )
-endif(APPLE)
+endif()
 
-if(LINUX)
+if(ALSA)
     set(SOURCES
             ${SOURCES}
 
             src/linux/aio_alsa.cpp
-            src/linux/aio_pulse.cpp
-
             include/linux/aio_alsa.h
-            include/linux/aio_pulse.h
         )
 endif()
 
-if(WIN32)
+
+if(PULSE)
     set(SOURCES
             ${SOURCES}
 
-            src/windows/aio_asiowin32.cpp
-        )
+            src/linux/aio_pulse.cpp
+            include/linux/aio_pulse.h
+            )
 endif()
+
+if(JACK)
+    set(SOURCES
+            src/aio_jack.cpp
+            include/aio_jack.h
+            )
+endif()
+
+
+if(ASIO)
+    include_directories(3rd_party/ASIOSDK2.3/host)
+    include_directories(3rd_party/ASIOSDK2.3/common)
+    set(SOURCES
+            ${SOURCES}
+
+            3rd_party/ASIOSDK2.3/host/asiodrivers.h
+            3rd_party/ASIOSDK2.3/host/asiodrivers.cpp
+
+            src/aio_asio.cpp
+            )
+    if(WIN32)
+        include_directories(3rd_party/ASIOSDK2.3/host/pc)
+        set(SOURCES
+                ${SOURCES}
+
+                src/windows/aio_asiowin32.cpp
+                )
+    endif()
+    if(APPLE)
+        include_directories(3rd_party/ASIOSDK2.3/host/mac)
+        set(SOURCES
+                ${SOURCES}
+
+                src/osx/aio_asioosx.cpp
+                include/osx/aio_asioosx.cpp
+                )
+    endif()
+endif()
+
 
 include_directories("include")
 

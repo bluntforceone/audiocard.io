@@ -71,6 +71,7 @@ if(ASIO)
             3rd_party/ASIOSDK2.3/host/asiodrivers.cpp
 
             src/aio_asio.cpp
+            include/aio_asio.h
             )
     if(WIN32)
         include_directories(3rd_party/ASIOSDK2.3/host/pc)

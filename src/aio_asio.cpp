@@ -23,4 +23,11 @@
 namespace acio
 {
 
+int Asio::countDevices()
+{
+    return this->asioDrivers.asioGetNumDev();
+}
+
+
+
 }

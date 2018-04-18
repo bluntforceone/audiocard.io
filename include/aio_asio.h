@@ -23,12 +23,19 @@
 
 #include "aio_audio.h"
 
+#include "asiodrivers.h"
+
 namespace acio {
 
 class Asio : public Audio {
 public:
     ~Asio() override = default;
+public:
+    int countDevices() override;
 
+
+private:
+    AsioDrivers asioDrivers;
 };
 }
 

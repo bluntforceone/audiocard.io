@@ -25,10 +25,14 @@
 
 #include "asiodrivers.h"
 
+#include <vector>
+#include <string>
+
 namespace acio {
 
 class Asio : public Audio {
 public:
+    Asio();
     ~Asio() override = default;
 public:
     int countDevices() override;
@@ -36,6 +40,7 @@ public:
 
 private:
     AsioDrivers asioDrivers;
+    std::vector<std::string> driverNames;
 };
 }
 

@@ -20,9 +20,28 @@
 
 #include "aio_asio.h"
 #include <array>
+#include <memory>
 
 namespace acio
 {
+
+Asio::Asio()
+{
+    const int maxDrivers = 32;
+
+    std::array<char*, maxDrivers> driverNamesPtr;
+    std::array<std::array<char, 32>, maxDrivers> driverBuffers;
+    for (int index = 0; index < maxDrivers; ++index)
+    {
+        driverNamesPtr[index] = driverBuffers[index].data();
+    }
+
+    auto driverCount = this->asioDrivers.getDriverNames(driverNamesPtr.data(), maxDrivers);
+    for (long index = 0; index < driverCount; ++index)
+    {
+        this->driverNames.push_back(driverNamesPtr[index]);
+    }
+}
 
 int Asio::countDevices()
 {
@@ -33,10 +52,7 @@ DeviceInfo Asio::getDeviceInfo(int index)
 {
     DeviceInfo deviceInfo {};
 
-    std::array<char, 32> driverName;
-    this->asioDrivers.asioGetDriverName(index, driverName.data(), 32);
-
-    deviceInfo.name = driverName.data();
+    deviceInfo.name = this->driverNames[index];
 
     return deviceInfo;
 }

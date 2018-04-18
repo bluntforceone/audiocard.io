@@ -14,20 +14,43 @@ endif(LINUX)
 set(SOURCES
             src/aio_asio.cpp
             src/aio_jack.cpp
-            src/osx/aio_asioosx.cpp
-            src/windows/aio_asiowin32.cpp
 
-            include/aio_jack.h
+            include/aio_asio.h
             include/aio_audio.h
-            )
+            include/aio_jack.h
+        )
 
+if(APPLE)
+    set(SOURCES
+            ${SOURCES}
+
+            src/osx/aio_asioosx.cpp
+            src/osx/aio_coreaudio.cpp
+
+            include/osx/aio_asioosx.cpp
+            include/osx/aio_coreaudio.cpp
+
+            )
+endif(APPLE)
 
 if(LINUX)
     set(SOURCES
             ${SOURCES}
+
             src/linux/aio_alsa.cpp
+            src/linux/aio_pulse.cpp
+
             include/linux/aio_alsa.h
-            )
+            include/linux/aio_pulse.h
+        )
+endif()
+
+if(WIN32)
+    set(SOURCES
+            ${SOURCES}
+
+            src/windows/aio_asiowin32.cpp
+        )
 endif()
 
 include_directories("include")

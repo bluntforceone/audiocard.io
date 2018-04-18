@@ -10,4 +10,10 @@ Pull requests are welcome:
 audiocard is licensed under the MIT license. 
 
 
-Credit where credit is due: This library is largely inspired by Gary P. Scavone's work on RtAudio.
+Credit where credit is due: This library is largely inspired by Gary P. Scavone's work on RtAudio. 
+
+The goals for this project differ from Gary's:
+  * Keep the different implementations in different source files and use conditions in the CMakeLists.txt file, rather than #ifdefs in a single cpp file. 
+  * Use more modern C++ (C++17)
+  
+Neither of these goals are criticism of Gary's project, he started RtAudio long before modern C++ existed and to update it to modern C++ would potentially restrict the existing user base.

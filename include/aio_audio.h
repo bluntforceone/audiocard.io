@@ -57,9 +57,6 @@ struct DeviceInfo {
     std::string name;
     int outputChannels;
     int inputChannels;
-    int duplexChannels;
-    bool isDefaultOutput;
-    bool isDefaultInput;
     std::vector<unsigned int> sampleRates;
     unsigned int preferredSampleRate;
     AudioFormat nativeFormats;

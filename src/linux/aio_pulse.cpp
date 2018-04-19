@@ -45,9 +45,6 @@ DeviceInfo Pulse::getDeviceInfo(int index)
     deviceInfo.name = "PulseAudio";
     deviceInfo.outputChannels = 2;
     deviceInfo.inputChannels = 2;
-    deviceInfo.duplexChannels = 2;
-    deviceInfo.isDefaultOutput = true;
-    deviceInfo.isDefaultInput = true;
 
     deviceInfo.sampleRates = std::vector<unsigned int>(SupportedSampleRates.begin(), SupportedSampleRates.end());
     deviceInfo.preferredSampleRate = 48000;

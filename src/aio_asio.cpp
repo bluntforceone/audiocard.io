@@ -21,9 +21,21 @@
 #include "aio_asio.h"
 #include <array>
 #include <memory>
+#include <asio.h>
+
+#include <iostream>
 
 namespace acio
 {
+
+namespace {
+
+const int MAX_SAMPLE_RATES = 14;
+const std::array<unsigned int, MAX_SAMPLE_RATES> SAMPLE_RATES {
+        4000, 5512, 8000, 9600, 11025, 16000, 22050,
+        32000, 44100, 48000, 88200, 96000, 176400, 192000
+};
+}
 
 Asio::Asio()
 {
@@ -39,21 +51,71 @@ Asio::Asio()
     auto driverCount = this->asioDrivers.getDriverNames(driverNamesPtr.data(), maxDrivers);
     for (long index = 0; index < driverCount; ++index)
     {
-        this->driverNames.push_back(driverNamesPtr[index]);
+        DeviceInfo deviceInfo;
+
+        deviceInfo.name = driverNamesPtr[index];
+        this->asioDrivers.loadDriver(driverNamesPtr[index]);
+
+        ASIODriverInfo driverInfo {};
+        ASIOInit(&driverInfo);
+
+        long inputChannels { 0 };
+        long outputChannels { 0 };
+
+        ASIOGetChannels(&inputChannels, &outputChannels);
+        deviceInfo.inputChannels = inputChannels;
+        deviceInfo.outputChannels = outputChannels;
+        deviceInfo.changeableInputChannelCount = false;
+        deviceInfo.changeableOutputChannelCount = false;
+
+        ASIOChannelInfo channelInfo {};
+
+        if (inputChannels > 0) {
+            channelInfo.isInput = true;
+            channelInfo.channel = 0;
+            ASIOGetChannelInfo(&channelInfo);
+        }
+        if (outputChannels > 0) {
+            channelInfo.isInput = true;
+            channelInfo.channel = 0;
+            ASIOGetChannelInfo(&channelInfo);
+        }
+
+        if ( channelInfo.type == ASIOSTInt16MSB || channelInfo.type == ASIOSTInt16LSB ) {
+            deviceInfo.nativeFormats |= AudioFormat::SINT16;
+        }
+        else if ( channelInfo.type == ASIOSTInt32MSB || channelInfo.type == ASIOSTInt32LSB ) {
+            deviceInfo.nativeFormats |= AudioFormat::SINT32;
+        }
+        else if ( channelInfo.type == ASIOSTFloat32MSB || channelInfo.type == ASIOSTFloat32LSB ) {
+            deviceInfo.nativeFormats |= AudioFormat::FLOAT32;
+        }
+        else if ( channelInfo.type == ASIOSTFloat64MSB || channelInfo.type == ASIOSTFloat64LSB ) {
+            deviceInfo.nativeFormats |= AudioFormat::FLOAT64;
+        }
+        else if ( channelInfo.type == ASIOSTInt24MSB || channelInfo.type == ASIOSTInt24LSB ) {
+            deviceInfo.nativeFormats |= AudioFormat::SINT24;
+        }
+
+        for ( size_t index=0; index< MAX_SAMPLE_RATES; ++index ) {
+            auto result = ASIOCanSampleRate((ASIOSampleRate) SAMPLE_RATES[index]);
+            if (result == ASE_OK) {
+                deviceInfo.sampleRates.push_back(SAMPLE_RATES[index]);
+            }
+        }
+
+        this->asioDrivers.removeCurrentDriver();
+        this->devices.emplace_back(deviceInfo);
     }
 }
 
 int Asio::countDevices()
 {
-    return this->driverNames.size();
+    return static_cast<int>(this->devices.size());
 }
 
 DeviceInfo Asio::getDeviceInfo(int index)
 {
-    DeviceInfo deviceInfo {};
-
-    deviceInfo.name = this->driverNames[index];
-
-    return deviceInfo;
+    return this->devices[index];
 }
 }

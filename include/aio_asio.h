@@ -40,7 +40,7 @@ public:
 
 private:
     AsioDrivers asioDrivers;
-    std::vector<std::string> driverNames;
+    std::vector<DeviceInfo> devices;
 };
 }
 

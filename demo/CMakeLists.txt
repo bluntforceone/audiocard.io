@@ -21,3 +21,12 @@ if(BUILD_ASIO)
     add_executable(demo_asio ${ASIO_SOURCES})
     target_link_libraries(demo_asio audiocard_io ${ASIO_LIBRARIES})
 endif(BUILD_ASIO)
+
+if (BUILD_PULSE)
+    set(PULSE_SOURCES
+            demo_probe.h
+            probe_pulse.cpp
+            )
+    add_executable(demo_pulse ${PULSE_SOURCES})
+    target_link_libraries(demo_pulse audiocard_io ${PULSE_LIBRARIES})
+endif(BUILD_PULSE)

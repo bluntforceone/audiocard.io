@@ -7,7 +7,7 @@ if (UNIX AND NOT APPLE)
     set(LINUX TRUE)
 endif()
 
-if (APPLE OR WIN32)
+if (WIN32)
     set(BUILD_ASIO TRUE)
 endif()
 
@@ -88,17 +88,6 @@ if(BUILD_ASIO)
                 3rd_party/ASIOSDK2.3/host/pc/asiolist.h
 
                 src/windows/aio_asiowin32.cpp
-                )
-    endif()
-    if(APPLE)
-        include_directories(3rd_party/ASIOSDK2.3/host/mac)
-        set(SOURCES
-                ${SOURCES}
-
-                3rd_party/ASIOSDK2.3/host/mac/codefragments.hpp
-                3rd_party/ASIOSDK2.3/host/mac/codefragments.cpp
-
-                src/osx/aio_asioosx.cpp
                 )
     endif()
 endif()

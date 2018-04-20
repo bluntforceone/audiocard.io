@@ -30,3 +30,15 @@ if (BUILD_PULSE)
     add_executable(demo_pulse ${PULSE_SOURCES})
     target_link_libraries(demo_pulse audiocard_io ${PULSE_LIBRARIES})
 endif(BUILD_PULSE)
+
+if (BUILD_COREAUDIO)
+    set(COREAUDIO_SOURCES
+            demo_probe.h
+            probe_coreaudio.cpp
+            )
+    add_executable(demo_coreaudio ${COREAUDIO_SOURCES})
+
+    target_link_libraries(demo_coreaudio audiocard_io ${AUDIOUNIT_LIBRARY} ${COREAUDIO_LIBRARY} ${COREFOUNDATION_LIBRARY})
+endif(BUILD_COREAUDIO)
+
+

@@ -27,12 +27,15 @@ namespace acio {
 
 class CoreAudio : public Audio {
 public:
+    CoreAudio();
     ~CoreAudio() override = default;
 
 public:
     int countDevices() override;
     DeviceInfo getDeviceInfo(int index) override;
 
+private:
+    int _deviceCount{ 0 };
 };
 }
 

@@ -32,6 +32,9 @@ if(BUILD_COREAUDIO)
             src/osx/aio_coreaudio.cpp
             include/osx/aio_coreaudio.h
             )
+    find_library(COREAUDIO_LIBRARY NAMES CoreAudio)
+    find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation)
+    find_library(AUDIOUNIT_LIBRARY NAMES AudioUnit)
 endif()
 
 if(BUILD_ALSA)

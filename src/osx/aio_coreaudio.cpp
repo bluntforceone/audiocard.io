@@ -19,12 +19,35 @@
  ***************************************************************************************************/
 
 #include "osx/aio_coreaudio.h"
+#include <AudioUnit/AudioUnit.h>
+#include <CoreAudio/CoreAudio.h>
+#include <iostream>
 
 namespace acio {
 
+CoreAudio::CoreAudio()
+{
+    UInt32 io_size{};
+    OSStatus os_err{};
+
+    AudioObjectPropertyAddress prop_address = {
+        kAudioHardwarePropertyDevices,
+        kAudioObjectPropertyScopeGlobal,
+        kAudioObjectPropertyElementMaster
+    };
+
+    if ((os_err = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject,
+             &prop_address, 0, NULL, &io_size))) {
+        std::cout << "Error:" << os_err << std::endl;
+        return;
+    }
+
+    this->_deviceCount = io_size / sizeof(AudioObjectID);
+}
+
 int CoreAudio::countDevices()
 {
-    return 0;
+    return this->_deviceCount;
 }
 
 DeviceInfo CoreAudio::getDeviceInfo(int index)

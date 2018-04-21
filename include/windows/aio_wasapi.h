@@ -41,9 +41,10 @@ public:
 
 private:
     acom::CoInit coInit { COINIT_APARTMENTTHREADED };
-    std::vector<DeviceInfo> devices;
+    std::vector<DeviceInfo> inputDevices;
+    std::vector<DeviceInfo> outputDevices;
 
-    void enumDeviceEnumerator(IMMDeviceCollection* enumerator);
+    void enumDeviceEnumerator(IMMDeviceCollection* enumerator, std::vector<DeviceInfo>& devices);
 
 };
 }

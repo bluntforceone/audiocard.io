@@ -17,64 +17,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.          *
  *                                                                                                  *
  ***************************************************************************************************/
-#include "windows/aio_wasapi.h"
-#include "windows/aio_string.h"
-#include "windows/com/aio_propvariant.h"
-#include <Functiondiscoverykeys_devpkey.h>
-#include <iostream>
+#ifndef AUDIOCARD_IO_STRING_H
+#define AUDIOCARD_IO_STRING_H
+
+#include <string>
 
 namespace acio {
 
-Wasapi::Wasapi()
+template <typename T>
+inline T string_cast(const std::wstring& wString)
 {
-
-    acom::ICom<IMMDeviceCollection> pDevices;
-    acom::ICom<IMMDeviceEnumerator> deviceEnumerator(__uuidof(MMDeviceEnumerator));
-
-    HRESULT hr = deviceEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &pDevices);
-    if (hr != S_OK) {
-        return;
-    }
-
-    this->enumDeviceEnumerator(pDevices.obj, this->outputDevices);
-
-    hr = deviceEnumerator->EnumAudioEndpoints(eCapture, DEVICE_STATE_ACTIVE, &pDevices);
-    if (hr != S_OK) {
-        return;
-    }
-
-    this->enumDeviceEnumerator(pDevices.obj, this->inputDevices);
-}
-
-void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, std::vector<DeviceInfo>& devices)
-{
-    UINT count = 0;
-    pDevices->GetCount(&count);
-    devices.resize(count);
-
-    for (UINT index = 0; index < count; ++index) {
-        acom::ICom<IMMDevice> pDevice;
-        if (S_OK == pDevices->Item(index, &pDevice)) {
-            acom::ICom<IPropertyStore> pPropertyStore;
-            pDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
-            acom::PropVariant property;
-            pPropertyStore->GetValue(PKEY_Device_FriendlyName , &property);
-            devices[index].name = string_cast<std::string>(property->pwszVal);
-        }
-    }
-}
-
-
-int Wasapi::countDevices()
-{
-    return static_cast<int>(this->inputDevices.size() + this->outputDevices.size());
-}
-
-DeviceInfo Wasapi::getDeviceInfo(int index)
-{
-    if (index >=0 && index < this->inputDevices.size()) {
-        return this->inputDevices[index];
-    }
-    return this->outputDevices[index - this->inputDevices.size()];
+    int strLength = static_cast<int>(wString.length()) + 1;
+    int bufferLength = WideCharToMultiByte(CP_ACP, 0, wString.c_str(), strLength, 0, 0, 0, 0);
+    std::vector<char> buffer(bufferLength);
+    WideCharToMultiByte(CP_ACP, 0, wString.c_str(), strLength, buffer.data(), strLength, 0, 0);
+    return T(buffer.data());
 }
 }
+#endif //AUDIOCARD_IO_STRING_H

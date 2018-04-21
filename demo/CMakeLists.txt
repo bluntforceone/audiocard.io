@@ -22,6 +22,16 @@ if(BUILD_ASIO)
     target_link_libraries(demo_asio audiocard_io ${ASIO_LIBRARIES})
 endif(BUILD_ASIO)
 
+if(BUILD_WASAPI)
+    set(WASAPI_SOURCES
+            demo_probe.h
+            probe_wasapi.cpp
+            )
+    add_executable(demo_wasapi ${WASAPI_SOURCES})
+    target_link_libraries(demo_wasapi audiocard_io)
+endif(BUILD_WASAPI)
+
+
 if (BUILD_PULSE)
     set(PULSE_SOURCES
             demo_probe.h

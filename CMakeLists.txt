@@ -9,6 +9,7 @@ endif()
 
 if (WIN32)
     set(BUILD_ASIO TRUE)
+    set(BUILD_WASAPI TRUE)
 endif()
 
 if (APPLE)
@@ -28,7 +29,6 @@ endif(BUILD_ALSA)
 if (BUILD_JACK)
     find_library(JACK_LIBRARY NAMES jack)
 endif(BUILD_JACK)
-
 
 if(BUILD_COREAUDIO)
     set(SOURCES
@@ -96,6 +96,18 @@ if(BUILD_ASIO)
 
                 3rd_party/ASIOSDK2.3/host/pc/asiolist.cpp
                 3rd_party/ASIOSDK2.3/host/pc/asiolist.h
+
+                )
+    endif()
+endif()
+
+if(BUILD_WASAPI)
+    if(WIN32)
+        set(SOURCES
+                ${SOURCES}
+
+                include/windows/aio_wasapi.h
+                src/windows/aio_wasapi.cpp
 
                 )
     endif()

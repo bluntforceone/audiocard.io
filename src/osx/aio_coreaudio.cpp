@@ -41,8 +41,8 @@ CoreAudio::CoreAudio()
     }
 
     this->_deviceCount = io_size / sizeof(AudioObjectID);
-    this->_deviceIds.reserve(this->_deviceCount);
-    this->_deviceInfo.reserve(this->_deviceCount);
+    this->_deviceIds.resize(this->_deviceCount);
+    this->_deviceInfo.resize(this->_deviceCount);
 
     os_err = AudioObjectGetPropertyData(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size, this->_deviceIds.data());
     if (os_err != 0) {
@@ -51,7 +51,7 @@ CoreAudio::CoreAudio()
     }
 
     for (int deviceIndex = 0; deviceIndex < this->_deviceCount; ++deviceIndex) {
-        DeviceInfo deviceInfo{};
+    
 
         cf::String deviceName;
 

@@ -41,4 +41,15 @@ if (BUILD_COREAUDIO)
     target_link_libraries(demo_coreaudio audiocard_io ${AUDIOUNIT_LIBRARY} ${COREAUDIO_LIBRARY} ${COREFOUNDATION_LIBRARY})
 endif(BUILD_COREAUDIO)
 
+if (BUILD_JACK)
+    set(JACK_SOURCES
+            demo_probe.h
+            probe_jack.cpp
+            )
+    add_executable(demo_jack ${JACK_SOURCES})
+
+    target_link_libraries(demo_jack audiocard_io ${JACK_LIBRARY})
+endif(BUILD_JACK)
+
+
 

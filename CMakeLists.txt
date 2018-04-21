@@ -25,6 +25,11 @@ if (BUILD_ALSA)
 find_package(ALSA REQUIRED)
 endif(BUILD_ALSA)
 
+if (BUILD_JACK)
+    find_library(JACK_LIBRARY NAMES jack)
+endif(BUILD_JACK)
+
+
 if(BUILD_COREAUDIO)
     set(SOURCES
             ${SOURCES}

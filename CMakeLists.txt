@@ -97,7 +97,6 @@ if(BUILD_ASIO)
                 3rd_party/ASIOSDK2.3/host/pc/asiolist.cpp
                 3rd_party/ASIOSDK2.3/host/pc/asiolist.h
 
-                src/windows/aio_asiowin32.cpp
                 )
     endif()
 endif()

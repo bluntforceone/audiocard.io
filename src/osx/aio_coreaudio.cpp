@@ -19,9 +19,6 @@
  ***************************************************************************************************/
 
 #include "osx/aio_coreaudio.h"
-#include "osx/corefoundation/cf_string.h"
-#include <AudioUnit/AudioUnit.h>
-#include <CoreAudio/CoreAudio.h>
 #include <iostream>
 
 namespace acio {
@@ -44,10 +41,10 @@ CoreAudio::CoreAudio()
     }
 
     this->_deviceCount = io_size / sizeof(AudioObjectID);
+    this->_deviceIds.reserve(this->_deviceCount);
+    this->_deviceInfo.reserve(this->_deviceCount);
 
-    std::vector<AudioObjectID> devices(this->_deviceCount);
-
-    os_err = AudioObjectGetPropertyData(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size, devices.data());
+    os_err = AudioObjectGetPropertyData(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size, this->_deviceIds.data());
     if (os_err != 0) {
         std::cout << "Error:" << os_err << std::endl;
         return;
@@ -56,7 +53,6 @@ CoreAudio::CoreAudio()
     for (int deviceIndex = 0; deviceIndex < this->_deviceCount; ++deviceIndex) {
         DeviceInfo deviceInfo{};
 
-        AudioObjectID deviceId = devices[deviceIndex];
         cf::String deviceName;
 
         prop_address.mSelector = kAudioObjectPropertyName;
@@ -64,15 +60,12 @@ CoreAudio::CoreAudio()
         prop_address.mElement = kAudioObjectPropertyElementMaster;
         io_size = sizeof(CFStringRef);
 
-        os_err = AudioObjectGetPropertyData(deviceId, &prop_address, 0, NULL, &io_size, &deviceName.stringRef);
+        os_err = AudioObjectGetPropertyData(this->_deviceIds[deviceIndex], &prop_address, 0, NULL, &io_size, &deviceName.stringRef);
         if (os_err != 0) {
             std::cout << "Error:" << os_err << std::endl;
-            return;
+            continue;
         }
-
-        deviceInfo.name = deviceName.stdString();
-
-        this->_deviceInfo.emplace_back(std::move(deviceInfo));
+        this->_deviceInfo[deviceIndex].name = deviceName.stdString();
     }
 }
 

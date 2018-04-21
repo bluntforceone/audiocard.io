@@ -22,6 +22,9 @@
 #define AUDIOCARD_IO_COREAUDIO_H
 
 #include "aio_audio.h"
+#include "osx/corefoundation/cf_string.h"
+#include <AudioUnit/AudioUnit.h>
+#include <CoreAudio/CoreAudio.h>
 
 namespace acio {
 
@@ -36,6 +39,7 @@ public:
 
 private:
     std::vector<DeviceInfo> _deviceInfo;
+    std::vector<AudioObjectID> _deviceIds;
     int _deviceCount{ 0 };
 };
 }

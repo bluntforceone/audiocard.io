@@ -35,6 +35,7 @@ public:
     DeviceInfo getDeviceInfo(int index) override;
 
 private:
+    std::vector<DeviceInfo> _deviceInfo;
     int _deviceCount{ 0 };
 };
 }

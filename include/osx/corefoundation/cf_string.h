@@ -18,71 +18,38 @@
  *                                                                                                  *
  ***************************************************************************************************/
 
-#include "osx/aio_coreaudio.h"
-#include "osx/corefoundation/cf_string.h"
-#include <AudioUnit/AudioUnit.h>
-#include <CoreAudio/CoreAudio.h>
-#include <iostream>
+#ifndef AUDIOCARD_IO_CF_STRING_H
+#define AUDIOCARD_IO_CF_STRING_H
 
-namespace acio {
+#include <CoreFoundation/CoreFoundation.h>
 
-CoreAudio::CoreAudio()
-{
-    UInt32 io_size{};
-    OSStatus os_err{};
-
-    AudioObjectPropertyAddress prop_address = {
-        kAudioHardwarePropertyDevices,
-        kAudioObjectPropertyScopeGlobal,
-        kAudioObjectPropertyElementMaster
-    };
-
-    os_err = AudioObjectGetPropertyDataSize(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size);
-    if (os_err != 0) {
-        std::cout << "Error:" << os_err << std::endl;
-        return;
+namespace cf {
+class String {
+public:
+    ~String()
+    {
+        if (this->stringRef) {
+            CFRelease(this->stringRef);
+            this->stringRef = nullptr;
+        }
     }
 
-    this->_deviceCount = io_size / sizeof(AudioObjectID);
+    CFStringRef stringRef{ nullptr };
 
-    std::vector<AudioObjectID> devices(this->_deviceCount);
+    std::string stdString()
+    {
+        std::string value;
 
-    os_err = AudioObjectGetPropertyData(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size, devices.data());
-    if (os_err != 0) {
-        std::cout << "Error:" << os_err << std::endl;
-        return;
-    }
-
-    for (int deviceIndex = 0; deviceIndex < this->_deviceCount; ++deviceIndex) {
-        DeviceInfo deviceInfo{};
-
-        AudioObjectID deviceId = devices[deviceIndex];
-        cf::String deviceName;
-
-        prop_address.mSelector = kAudioObjectPropertyName;
-        prop_address.mScope = kAudioObjectPropertyScopeGlobal;
-        prop_address.mElement = kAudioObjectPropertyElementMaster;
-        io_size = sizeof(CFStringRef);
-
-        os_err = AudioObjectGetPropertyData(deviceId, &prop_address, 0, NULL, &io_size, &deviceName.stringRef);
-        if (os_err != 0) {
-            std::cout << "Error:" << os_err << std::endl;
-            return;
+        CFIndex length = CFStringGetLength(this->stringRef);
+        CFIndex max_size = CFStringGetMaximumSizeForEncoding(length, kCFStringEncodingUTF8);
+        auto buffer = std::vector<char>(max_size);
+        if (!CFStringGetCString(this->stringRef, buffer.data(), max_size, kCFStringEncodingUTF8)) {
+            return std::string();
         }
 
-        deviceInfo.name = deviceName.stdString();
-
-        this->_deviceInfo.emplace_back(std::move(deviceInfo));
+        return std::string(buffer.data());
     }
+};
 }
 
-int CoreAudio::countDevices()
-{
-    return this->_deviceCount;
-}
-
-DeviceInfo CoreAudio::getDeviceInfo(int index)
-{
-    return this->_deviceInfo[index];
-}
-}
+#endif //AUDIOCARD_IO_CF_STRING_H

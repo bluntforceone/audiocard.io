@@ -36,6 +36,8 @@ if(BUILD_COREAUDIO)
 
             src/osx/aio_coreaudio.cpp
             include/osx/aio_coreaudio.h
+
+            include/osx/corefoundation/cf_string.h
             )
     find_library(COREAUDIO_LIBRARY NAMES CoreAudio)
     find_library(COREFOUNDATION_LIBRARY NAMES CoreFoundation)

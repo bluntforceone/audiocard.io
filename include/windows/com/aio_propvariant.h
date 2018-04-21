@@ -17,59 +17,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.          *
  *                                                                                                  *
  ***************************************************************************************************/
-#include "windows/aio_wasapi.h"
-#include "windows/com/aio_propvariant.h"
-#include <Functiondiscoverykeys_devpkey.h>
-#include <iostream>
+#ifndef AUDIOCARD_IO_PROPVARIANT_H
+#define AUDIOCARD_IO_PROPVARIANT_H
 
-namespace acio {
+#include <Windows.h>
 
-Wasapi::Wasapi()
+namespace acom
 {
-
-    acom::ICom<IMMDeviceCollection> pDevices;
-    acom::ICom<IMMDeviceEnumerator> deviceEnumerator(__uuidof(MMDeviceEnumerator));
-
-    HRESULT hr = deviceEnumerator->EnumAudioEndpoints(eRender, DEVICE_STATE_ACTIVE, &pDevices);
-    if (hr != S_OK) {
-        return;
+class PropVariant
+{
+public:
+    PropVariant()
+    {
+        PropVariantInit(&value);
+    }
+    ~PropVariant()
+    {
+        PropVariantClear(&value);
     }
 
-    this->enumDeviceEnumerator(pDevices.obj);
+    PROPVARIANT value;
 
-    hr = deviceEnumerator->EnumAudioEndpoints(eCapture, DEVICE_STATE_ACTIVE, &pDevices);
-    if (hr != S_OK) {
-        return;
+    PROPVARIANT* operator&()
+    {
+        return &this->value;
     }
 
-    this->enumDeviceEnumerator(pDevices.obj);
-}
-
-void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices)
-{
-    UINT count = 0;
-    pDevices->GetCount(&count);
-
-    for (UINT index = 0; index < count; ++index) {
-        acom::ICom<IMMDevice> pDevice;
-        if (S_OK == pDevices->Item(index, &pDevice)) {
-            acom::ICom<IPropertyStore> pPropertyStore;
-            pDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
-            acom::PropVariant property;
-            pPropertyStore->GetValue(PKEY_Device_FriendlyName , &property);
-            std::wcout << property->pwszVal << L"\n";
-        }
+    PROPVARIANT* operator->()
+    {
+        return &this->value;
     }
+
+};
+
 }
 
-
-int Wasapi::countDevices()
-{
-    return static_cast<int>(this->devices.size());
-}
-
-DeviceInfo Wasapi::getDeviceInfo(int index)
-{
-    return DeviceInfo();
-}
-}
+#endif //AUDIOCARD_IO_PROPVARIANT_H

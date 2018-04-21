@@ -21,22 +21,30 @@
 #ifndef AUDIOCARD_IO_WASAPI_H
 #define AUDIOCARD_IO_WASAPI_H
 
-#include "aio_audio.h"
-
+#include <Windows.h>
+#include <Mmdeviceapi.h>
 #include <vector>
+
+#include "aio_audio.h"
+#include "windows/com/aio_coinit.h"
+#include "windows/com/aio_com.h"
 
 namespace acio {
 
 class Wasapi : public Audio {
 public:
     Wasapi();
-    ~Wasapi() override = default;
+    ~Wasapi() = default;
 public:
     int countDevices() override;
     DeviceInfo getDeviceInfo(int index) override;
 
 private:
+    acom::CoInit coInit { COINIT_APARTMENTTHREADED };
     std::vector<DeviceInfo> devices;
+
+    void enumDeviceEnumerator(IMMDeviceCollection* enumerator);
+
 };
 }
 #endif //AUDIOCARD_IO_WASAPI_H

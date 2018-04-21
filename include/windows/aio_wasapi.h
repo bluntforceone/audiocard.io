@@ -44,7 +44,7 @@ private:
     std::vector<DeviceInfo> inputDevices;
     std::vector<DeviceInfo> outputDevices;
 
-    void enumDeviceEnumerator(IMMDeviceCollection* enumerator, std::vector<DeviceInfo>& devices);
+    void enumDeviceEnumerator(IMMDeviceCollection* enumerator, bool input);
 
 };
 }

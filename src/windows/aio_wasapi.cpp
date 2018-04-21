@@ -20,6 +20,8 @@
 #include "windows/aio_wasapi.h"
 #include "windows/aio_string.h"
 #include "windows/com/aio_propvariant.h"
+#include <Audioclient.h>
+#include <Endpointvolume.h>
 #include <Functiondiscoverykeys_devpkey.h>
 #include <iostream>
 
@@ -36,18 +38,20 @@ Wasapi::Wasapi()
         return;
     }
 
-    this->enumDeviceEnumerator(pDevices.obj, this->outputDevices);
+    this->enumDeviceEnumerator(pDevices.obj, false);
 
     hr = deviceEnumerator->EnumAudioEndpoints(eCapture, DEVICE_STATE_ACTIVE, &pDevices);
     if (hr != S_OK) {
         return;
     }
 
-    this->enumDeviceEnumerator(pDevices.obj, this->inputDevices);
+    this->enumDeviceEnumerator(pDevices.obj, true);
 }
 
-void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, std::vector<DeviceInfo>& devices)
+void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, bool input)
 {
+    std::vector<DeviceInfo>& devices = input ? this->inputDevices : this->outputDevices;
+
     UINT count = 0;
     pDevices->GetCount(&count);
     devices.resize(count);
@@ -57,13 +61,23 @@ void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, std::vector<Dev
         if (S_OK == pDevices->Item(index, &pDevice)) {
             acom::ICom<IPropertyStore> pPropertyStore;
             pDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
-            acom::PropVariant property;
-            pPropertyStore->GetValue(PKEY_Device_FriendlyName , &property);
-            devices[index].name = string_cast<std::string>(property->pwszVal);
+            acom::PropVariant propertyName;
+            pPropertyStore->GetValue(PKEY_Device_FriendlyName, &propertyName);
+            devices[index].name = string_cast<std::string>(propertyName->pwszVal);
+            
+            acom::ICom<IAudioEndpointVolume> pAudioEndpointVolume;
+            if (S_OK == pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume)) {
+                UINT channelCount{ 0 };
+                pAudioEndpointVolume->GetChannelCount(&channelCount);
+                if (input) {
+                    devices[index].inputChannels = static_cast<int>(channelCount);
+                } else {
+                    devices[index].outputChannels = static_cast<int>(channelCount);
+                }
+            }
         }
     }
 }
-
 
 int Wasapi::countDevices()
 {
@@ -72,7 +86,7 @@ int Wasapi::countDevices()
 
 DeviceInfo Wasapi::getDeviceInfo(int index)
 {
-    if (index >=0 && index < this->inputDevices.size()) {
+    if (index >= 0 && index < this->inputDevices.size()) {
         return this->inputDevices[index];
     }
     return this->outputDevices[index - this->inputDevices.size()];

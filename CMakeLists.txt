@@ -30,6 +30,10 @@ if (BUILD_JACK)
     find_library(JACK_LIBRARY NAMES jack)
 endif(BUILD_JACK)
 
+
+set(SOURCES include/aio_audio.h)
+
+
 if(BUILD_COREAUDIO)
     set(SOURCES
             ${SOURCES}

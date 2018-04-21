@@ -1,8 +1,15 @@
 # audiocard.io
 Cross Platform Library for Linux, Windows and MacOS to talk to audio hardware
 
-This library is currenly pre-alpha and under development. It is not currently functional. 
+APIs which will be supported:
+  * CoreAudio - OSx
+  * WASAPI - Windows
+  * ASIO - Windows
+  * PulseAudio - Linux
+  * Jack - Windows, Linux, OSx
+  * Alsa - Linux
 
+This library is currenly pre-alpha and under development. It is not currently functional. 
 
 Pull requests are welcome:
   All contributions must be released to the project under the MIT license. 

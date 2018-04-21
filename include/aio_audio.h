@@ -38,6 +38,13 @@ enum class AudioFormat : int
     FLOAT64 = 0x64
 };
 
+inline AudioFormat operator & (AudioFormat lhs, AudioFormat rhs)
+
+{
+    return static_cast<AudioFormat>(static_cast<std::underlying_type_t<AudioFormat>>(lhs) &
+                                    static_cast<std::underlying_type_t<AudioFormat>>(rhs));
+}
+
 inline AudioFormat operator | (AudioFormat lhs, AudioFormat rhs)
 
 {

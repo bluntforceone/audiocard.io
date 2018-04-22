@@ -27,11 +27,12 @@ namespace acio {
 
 class Alsa : public Audio {
 public:
+    Alsa();
     ~Alsa() override = default;
 
 public:
     int countDevices() override;
-    DeviceInfo getDeviceInfo(int index) override;
+    DeviceInfo* getDeviceInfo(int index) override;
 
 private:
     int countCards();
@@ -42,6 +43,10 @@ private:
 
     DeviceInfo getCardDeviceInfo(int cardIndex, int deviceIndex);
 
+private:
+    std::vector<DeviceInfo> _deviceInfo;
+
+    int _deviceCount{ 0 };
 };
 }
 

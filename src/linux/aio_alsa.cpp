@@ -35,6 +35,22 @@ namespace {
     };
 }
 
+Alsa::Alsa()
+{
+    int cardCount = this->countCards();
+    this->_deviceCount = 0;
+    for (int cardIndex = 0; cardIndex < cardCount; ++cardIndex) {
+        int cardDeviceCount = this->countCardDevices(cardIndex);
+        for (int cardDeviceIndex = 0; cardDeviceIndex < cardDeviceCount; ++cardDeviceIndex) {
+            this->_deviceInfo.emplace_back(this->getCardDeviceInfo(cardIndex, cardDeviceIndex));
+            ++this->_deviceCount;
+        }
+    }
+    if (this->hasDefault()) {
+        this->_deviceInfo[this->_deviceCount++] = this->getCardDeviceInfo(-1, -1);
+    }
+}
+
 std::string alsaDeviceName(int cardIndex, int deviceIndex = -1)
 {
     std::stringstream name;
@@ -78,34 +94,12 @@ bool Alsa::hasDefault()
 
 int Alsa::countDevices()
 {
-    int deviceCount = this->countAllSubDevices();
-
-    if (this->hasDefault()) {
-        ++deviceCount;
-    }
-
-    return deviceCount;
+    return this->_deviceCount;
 }
 
-DeviceInfo Alsa::getDeviceInfo(int index)
+DeviceInfo* Alsa::getDeviceInfo(int index)
 {
-
-    int deviceCount = this->countDevices();
-
-    if (index < 0 || index >= deviceCount) {
-        return DeviceInfo{};
-    }
-
-    int cardCount = this->countCards();
-    for (int cardIndex = 0; cardIndex < cardCount; ++cardIndex) {
-        int cardDeviceCount = this->countCardDevices(cardIndex);
-        if (index < cardDeviceCount) {
-            return this->getCardDeviceInfo(cardIndex, index);
-        }
-        index -= cardDeviceCount;
-    }
-
-    return this->getCardDeviceInfo(-1, -1);
+    return &this->_deviceInfo[index];
 }
 
 int Alsa::countCards()
@@ -118,7 +112,7 @@ int Alsa::countCards()
 
         if (snd_ctl_open(&handle, alsaDeviceName(cardIndex).c_str(), 0) != 0) {
             continue;
-        }
+         }
 
         ++cardCount;
 
@@ -144,16 +138,6 @@ int Alsa::countCardDevices(int cardIndex)
 
     snd_ctl_close(handle);
 
-    return deviceCount;
-}
-
-int Alsa::countAllSubDevices()
-{
-    int deviceCount{ 0 };
-    int cardCount = this->countCards();
-    for (int cardIndex = 0; cardIndex < cardCount; ++cardIndex) {
-        deviceCount += this->countCardDevices(cardIndex);
-    }
     return deviceCount;
 }
 

@@ -27,21 +27,15 @@ namespace acio {
 
 class Pulse : public Audio {
 public:
+    Pulse();
     ~Pulse() override = default;
 
 public:
     int countDevices() override;
-    DeviceInfo getDeviceInfo(int index) override;
+    DeviceInfo* getDeviceInfo(int index) override;
 
 private:
-    int countCards();
-    int countCardDevices(int cardIndex);
-    int countAllSubDevices();
-    bool hasDefault();
-    int getAlsaDeviceIndex(int cardIndex, int deviceIndex);
-
-    DeviceInfo getCardDeviceInfo(int cardIndex, int deviceIndex);
-
+    DeviceInfo deviceInfo{};
 };
 }
 

@@ -19,12 +19,6 @@
  ***************************************************************************************************/
 
 #include "linux/aio_pulse.h"
-#include <alsa/asoundlib.h>
-#include <iosfwd>
-#include <sstream>
-
-#include <iostream>
-
 #include <array>
 
 namespace acio {
@@ -34,22 +28,24 @@ namespace {
         44100, 48000, 96000 };
 }
 
+Pulse::Pulse()
+{
+    this->deviceInfo.name = "PulseAudio";
+    this->deviceInfo.outputChannels = 2;
+    this->deviceInfo.inputChannels = 2;
+
+    this->deviceInfo.sampleRates = std::vector<unsigned int>(SupportedSampleRates.begin(), SupportedSampleRates.end());
+    this->deviceInfo.preferredSampleRate = 48000;
+    this->deviceInfo.nativeFormats = AudioFormat::SINT16 | AudioFormat::SINT32 | AudioFormat::FLOAT32;
+}
+
 int Pulse::countDevices()
 {
     return 1;
 }
 
-DeviceInfo Pulse::getDeviceInfo(int index)
+DeviceInfo* Pulse::getDeviceInfo(int index)
 {
-    DeviceInfo deviceInfo{};
-    deviceInfo.name = "PulseAudio";
-    deviceInfo.outputChannels = 2;
-    deviceInfo.inputChannels = 2;
-
-    deviceInfo.sampleRates = std::vector<unsigned int>(SupportedSampleRates.begin(), SupportedSampleRates.end());
-    deviceInfo.preferredSampleRate = 48000;
-    deviceInfo.nativeFormats = AudioFormat::SINT16 | AudioFormat::SINT32 | AudioFormat::FLOAT32;
-
-    return deviceInfo;
+    return &this->deviceInfo;
 }
 }

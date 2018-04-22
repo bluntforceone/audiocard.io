@@ -114,6 +114,7 @@ if(BUILD_WASAPI)
                 include/windows/com/aio_com.h
                 include/windows/com/aio_propvariant.h
 
+                include/windows/aio_waveformatex.h
                 include/windows/aio_wasapi.h
                 include/windows/aio_string.h
                 src/windows/aio_wasapi.cpp

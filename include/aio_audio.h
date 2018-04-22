@@ -78,7 +78,7 @@ public:
 
 public:
     virtual int countDevices() = 0;
-    virtual DeviceInfo getDeviceInfo(int index) = 0;
+    virtual DeviceInfo * getDeviceInfo(int index) = 0;
 };
 
 inline Audio::~Audio() = default;

@@ -36,7 +36,7 @@ public:
     ~Asio() override = default;
 public:
     int countDevices() override;
-    DeviceInfo getDeviceInfo(int index) override;
+    DeviceInfo * getDeviceInfo(int index) override;
 
 private:
     AsioDrivers asioDrivers;

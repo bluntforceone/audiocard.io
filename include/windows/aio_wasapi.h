@@ -21,8 +21,9 @@
 #ifndef AUDIOCARD_IO_WASAPI_H
 #define AUDIOCARD_IO_WASAPI_H
 
-#include <Windows.h>
+#include <Audioclient.h>
 #include <Mmdeviceapi.h>
+#include <Windows.h>
 #include <vector>
 
 #include "aio_audio.h"
@@ -31,20 +32,31 @@
 
 namespace acio {
 
+struct WasapiDeviceInfo : public DeviceInfo {
+    bool supportsExclusive{ false };
+};
+
 class Wasapi : public Audio {
 public:
     Wasapi();
+
     ~Wasapi() = default;
+
 public:
     int countDevices() override;
-    DeviceInfo getDeviceInfo(int index) override;
+
+    DeviceInfo* getDeviceInfo(int index) override;
 
 private:
-    acom::CoInit coInit { COINIT_APARTMENTTHREADED };
-    std::vector<DeviceInfo> inputDevices;
-    std::vector<DeviceInfo> outputDevices;
+    acom::CoInit coInit{ COINIT_APARTMENTTHREADED };
+    std::vector<WasapiDeviceInfo> inputDevices;
+    std::vector<WasapiDeviceInfo> outputDevices;
 
     void enumDeviceEnumerator(IMMDeviceCollection* enumerator, bool input);
+
+    void queryDevice(IMMDevice* pDevice, WasapiDeviceInfo& deviceInfo, bool input);
+    void querySampleRates(IAudioClient* pAudioClient, WasapiDeviceInfo& deviceInfo);
+    bool supportsExclusive(IAudioClient* pAudioClient);
 
 };
 }

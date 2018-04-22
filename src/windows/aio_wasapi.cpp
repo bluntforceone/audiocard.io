@@ -19,13 +19,20 @@
  ***************************************************************************************************/
 #include "windows/aio_wasapi.h"
 #include "windows/aio_string.h"
+#include "windows/aio_waveformatex.h"
 #include "windows/com/aio_propvariant.h"
-#include <Audioclient.h>
 #include <Endpointvolume.h>
 #include <Functiondiscoverykeys_devpkey.h>
+#include <array>
 #include <iostream>
 
 namespace acio {
+
+const int MAX_SAMPLE_RATES = 14;
+const std::array<unsigned int, MAX_SAMPLE_RATES> SAMPLE_RATES{
+    4000, 5512, 8000, 9600, 11025, 16000, 22050,
+    32000, 44100, 48000, 88200, 96000, 176400, 192000
+};
 
 Wasapi::Wasapi()
 {
@@ -50,7 +57,7 @@ Wasapi::Wasapi()
 
 void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, bool input)
 {
-    std::vector<DeviceInfo>& devices = input ? this->inputDevices : this->outputDevices;
+    std::vector<WasapiDeviceInfo>& devices = input ? this->inputDevices : this->outputDevices;
 
     UINT count = 0;
     pDevices->GetCount(&count);
@@ -64,19 +71,71 @@ void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, bool input)
             acom::PropVariant propertyName;
             pPropertyStore->GetValue(PKEY_Device_FriendlyName, &propertyName);
             devices[index].name = string_cast<std::string>(propertyName->pwszVal);
-            
-            acom::ICom<IAudioEndpointVolume> pAudioEndpointVolume;
-            if (S_OK == pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume)) {
-                UINT channelCount{ 0 };
-                pAudioEndpointVolume->GetChannelCount(&channelCount);
-                if (input) {
-                    devices[index].inputChannels = static_cast<int>(channelCount);
-                } else {
-                    devices[index].outputChannels = static_cast<int>(channelCount);
-                }
-            }
+
+            this->queryDevice(pDevice.obj, devices[index], input);
         }
     }
+}
+
+bool Wasapi::supportsExclusive(IAudioClient* pAudioClient)
+{
+    WAVEFORMATEX* pFormat{ nullptr };
+    if (S_OK != pAudioClient->GetMixFormat(&pFormat)) {
+        return false;
+    }
+
+    HRESULT hr = pAudioClient->IsFormatSupported(AUDCLNT_SHAREMODE_EXCLUSIVE, pFormat, nullptr);
+
+    CoTaskMemFree(pFormat);
+
+    return (hr == S_OK);
+}
+
+void Wasapi::querySampleRates(IAudioClient* pAudioClient, WasapiDeviceInfo& deviceInfo)
+{
+    bool exclusive = deviceInfo.supportsExclusive;
+
+    WAVEFORMATEXTENSIBLE* pFormat{ nullptr };
+    if (S_OK != pAudioClient->GetMixFormat(reinterpret_cast<WAVEFORMATEX**>(&pFormat))) {
+        return;
+    }
+
+    for (auto testSampleRate : SAMPLE_RATES) {
+        WAVEFORMATEXTENSIBLE* pSupported{ nullptr };
+        WaveFormatEx formatEx(WAVE_FORMAT_IEEE_FLOAT, pFormat->Format.nChannels, testSampleRate);
+
+        HRESULT hr = pAudioClient->IsFormatSupported(exclusive ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
+                                                     reinterpret_cast<WAVEFORMATEX*>(&formatEx),
+                                                     exclusive ? nullptr : reinterpret_cast<WAVEFORMATEX**>(&pSupported));
+        if (!exclusive && pSupported != nullptr) {
+            CoTaskMemFree(pSupported);
+            pSupported = nullptr;
+        }
+        if (hr == S_OK) {
+            deviceInfo.sampleRates.push_back(testSampleRate);
+        }
+    }
+
+    CoTaskMemFree(pFormat);
+}
+
+void Wasapi::queryDevice(IMMDevice* pDevice, WasapiDeviceInfo& deviceInfo, bool input)
+{
+    acom::ICom<IAudioEndpointVolume> pAudioEndpointVolume;
+    if (S_OK == pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume)) {
+        UINT channelCount{ 0 };
+        pAudioEndpointVolume->GetChannelCount(&channelCount);
+        if (input) {
+            deviceInfo.inputChannels = static_cast<int>(channelCount);
+        } else {
+            deviceInfo.outputChannels = static_cast<int>(channelCount);
+        }
+    }
+    acom::ICom<IAudioClient> pAudioClient;
+    pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&pAudioClient);
+
+    deviceInfo.supportsExclusive = this->supportsExclusive(pAudioClient.obj);
+    this->querySampleRates(pAudioClient.obj, deviceInfo);
 }
 
 int Wasapi::countDevices()
@@ -84,11 +143,11 @@ int Wasapi::countDevices()
     return static_cast<int>(this->inputDevices.size() + this->outputDevices.size());
 }
 
-DeviceInfo Wasapi::getDeviceInfo(int index)
+DeviceInfo* Wasapi::getDeviceInfo(int index)
 {
     if (index >= 0 && index < this->inputDevices.size()) {
-        return this->inputDevices[index];
+        return &this->inputDevices[index];
     }
-    return this->outputDevices[index - this->inputDevices.size()];
+    return &this->outputDevices[index - this->inputDevices.size()];
 }
 }

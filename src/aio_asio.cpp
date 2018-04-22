@@ -20,21 +20,20 @@
 
 #include "aio_asio.h"
 #include <array>
-#include <memory>
 #include <asio.h>
+#include <memory>
 
 #include <iostream>
 
-namespace acio
-{
+namespace acio {
 
 namespace {
 
-const int MAX_SAMPLE_RATES = 14;
-const std::array<unsigned int, MAX_SAMPLE_RATES> SAMPLE_RATES {
+    const int MAX_SAMPLE_RATES = 14;
+    const std::array<unsigned int, MAX_SAMPLE_RATES> SAMPLE_RATES{
         4000, 5512, 8000, 9600, 11025, 16000, 22050,
         32000, 44100, 48000, 88200, 96000, 176400, 192000
-};
+    };
 }
 
 Asio::Asio()
@@ -43,24 +42,22 @@ Asio::Asio()
 
     std::array<char*, maxDrivers> driverNamesPtr;
     std::array<std::array<char, 32>, maxDrivers> driverBuffers;
-    for (int index = 0; index < maxDrivers; ++index)
-    {
+    for (int index = 0; index < maxDrivers; ++index) {
         driverNamesPtr[index] = driverBuffers[index].data();
     }
 
     auto driverCount = this->asioDrivers.getDriverNames(driverNamesPtr.data(), maxDrivers);
-    for (long index = 0; index < driverCount; ++index)
-    {
+    for (long index = 0; index < driverCount; ++index) {
         DeviceInfo deviceInfo;
 
         deviceInfo.name = driverNamesPtr[index];
         this->asioDrivers.loadDriver(driverNamesPtr[index]);
 
-        ASIODriverInfo driverInfo {};
+        ASIODriverInfo driverInfo{};
         ASIOInit(&driverInfo);
 
-        long inputChannels { 0 };
-        long outputChannels { 0 };
+        long inputChannels{ 0 };
+        long outputChannels{ 0 };
 
         ASIOGetChannels(&inputChannels, &outputChannels);
         deviceInfo.inputChannels = inputChannels;
@@ -68,7 +65,7 @@ Asio::Asio()
         deviceInfo.changeableInputChannelCount = false;
         deviceInfo.changeableOutputChannelCount = false;
 
-        ASIOChannelInfo channelInfo {};
+        ASIOChannelInfo channelInfo{};
 
         if (inputChannels > 0) {
             channelInfo.isInput = true;
@@ -81,24 +78,20 @@ Asio::Asio()
             ASIOGetChannelInfo(&channelInfo);
         }
 
-        if ( channelInfo.type == ASIOSTInt16MSB || channelInfo.type == ASIOSTInt16LSB ) {
+        if (channelInfo.type == ASIOSTInt16MSB || channelInfo.type == ASIOSTInt16LSB) {
             deviceInfo.nativeFormats |= AudioFormat::SINT16;
-        }
-        else if ( channelInfo.type == ASIOSTInt32MSB || channelInfo.type == ASIOSTInt32LSB ) {
+        } else if (channelInfo.type == ASIOSTInt32MSB || channelInfo.type == ASIOSTInt32LSB) {
             deviceInfo.nativeFormats |= AudioFormat::SINT32;
-        }
-        else if ( channelInfo.type == ASIOSTFloat32MSB || channelInfo.type == ASIOSTFloat32LSB ) {
+        } else if (channelInfo.type == ASIOSTFloat32MSB || channelInfo.type == ASIOSTFloat32LSB) {
             deviceInfo.nativeFormats |= AudioFormat::FLOAT32;
-        }
-        else if ( channelInfo.type == ASIOSTFloat64MSB || channelInfo.type == ASIOSTFloat64LSB ) {
+        } else if (channelInfo.type == ASIOSTFloat64MSB || channelInfo.type == ASIOSTFloat64LSB) {
             deviceInfo.nativeFormats |= AudioFormat::FLOAT64;
-        }
-        else if ( channelInfo.type == ASIOSTInt24MSB || channelInfo.type == ASIOSTInt24LSB ) {
+        } else if (channelInfo.type == ASIOSTInt24MSB || channelInfo.type == ASIOSTInt24LSB) {
             deviceInfo.nativeFormats |= AudioFormat::SINT24;
         }
 
-        for ( size_t index=0; index< MAX_SAMPLE_RATES; ++index ) {
-            auto result = ASIOCanSampleRate((ASIOSampleRate) SAMPLE_RATES[index]);
+        for (size_t index = 0; index < MAX_SAMPLE_RATES; ++index) {
+            auto result = ASIOCanSampleRate((ASIOSampleRate)SAMPLE_RATES[index]);
             if (result == ASE_OK) {
                 deviceInfo.sampleRates.push_back(SAMPLE_RATES[index]);
             }
@@ -114,8 +107,8 @@ int Asio::countDevices()
     return static_cast<int>(this->devices.size());
 }
 
-DeviceInfo Asio::getDeviceInfo(int index)
+DeviceInfo* Asio::getDeviceInfo(int index)
 {
-    return this->devices[index];
+    return &this->devices[index];
 }
 }

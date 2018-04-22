@@ -29,43 +29,46 @@ void Probe()
     T api;
 
     int deviceCount = api.countDevices();
+
+    std::cout << std::dec;
+
     std::cout << "countDevices:" << deviceCount << std::endl;
 
     for (int index = 0; index < deviceCount; ++index) {
         auto deviceInfo = api.getDeviceInfo(index);
         std::cout << "--------------------" << std::endl;
-        std::cout << "name:" << deviceInfo.name << std::endl;
-        std::cout << "outputChannels:" << deviceInfo.outputChannels << std::endl;
-        std::cout << "inputChannels:" << deviceInfo.inputChannels << std::endl;
+        std::cout << "name:" << deviceInfo->name << std::endl;
+        std::cout << "outputChannels:" << deviceInfo->outputChannels << std::endl;
+        std::cout << "inputChannels:" << deviceInfo->inputChannels << std::endl;
 
         std::cout << "sampleRates:";
-        for (auto iter = deviceInfo.sampleRates.begin(); iter != deviceInfo.sampleRates.end(); iter++) {
-            if (iter != deviceInfo.sampleRates.begin()) {
+        for (auto iter = deviceInfo->sampleRates.begin(); iter != deviceInfo->sampleRates.end(); iter++) {
+            if (iter != deviceInfo->sampleRates.begin()) {
                 std::cout << ", ";
             }
             std::cout << *iter;
         }
         std::cout << std::endl;
 
-        std::cout << "preferred sampleRate:" << deviceInfo.preferredSampleRate << std::endl;
+        std::cout << "preferred sampleRate:" << deviceInfo->preferredSampleRate << std::endl;
 
         std::vector<std::string> formats;
-        if ((deviceInfo.nativeFormats & acio::AudioFormat::SINT8) == acio::AudioFormat::SINT8) {
+        if ((deviceInfo->nativeFormats & acio::AudioFormat::SINT8) == acio::AudioFormat::SINT8) {
             formats.emplace_back("SINT8");
         }
-        if ((deviceInfo.nativeFormats & acio::AudioFormat::SINT16) == acio::AudioFormat::SINT16) {
+        if ((deviceInfo->nativeFormats & acio::AudioFormat::SINT16) == acio::AudioFormat::SINT16) {
             formats.emplace_back("SINT16");
         }
-        if ((deviceInfo.nativeFormats & acio::AudioFormat::SINT24) == acio::AudioFormat::SINT24) {
+        if ((deviceInfo->nativeFormats & acio::AudioFormat::SINT24) == acio::AudioFormat::SINT24) {
             formats.emplace_back("SINT24");
         }
-        if ((deviceInfo.nativeFormats & acio::AudioFormat::SINT32) == acio::AudioFormat::SINT32) {
+        if ((deviceInfo->nativeFormats & acio::AudioFormat::SINT32) == acio::AudioFormat::SINT32) {
             formats.emplace_back("SINT32");
         }
-        if ((deviceInfo.nativeFormats & acio::AudioFormat::FLOAT32) == acio::AudioFormat::FLOAT32) {
+        if ((deviceInfo->nativeFormats & acio::AudioFormat::FLOAT32) == acio::AudioFormat::FLOAT32) {
             formats.emplace_back("FLOAT32");
         }
-        if ((deviceInfo.nativeFormats & acio::AudioFormat::FLOAT32) == acio::AudioFormat::FLOAT32) {
+        if ((deviceInfo->nativeFormats & acio::AudioFormat::FLOAT32) == acio::AudioFormat::FLOAT32) {
             formats.emplace_back("FLOAT64");
         }
         std::cout << "audioFormats:";
@@ -77,8 +80,8 @@ void Probe()
         }
         std::cout << std::endl;
 
-        std::cout << "changeableInputChannelCount = " << (deviceInfo.changeableInputChannelCount ? "true" : "false") << std::endl;
-        std::cout << "changeableOutputChannelCount = " << (deviceInfo.changeableOutputChannelCount ? "true" : "false") << std::endl;
+        std::cout << "changeableInputChannelCount = " << (deviceInfo->changeableInputChannelCount ? "true" : "false") << std::endl;
+        std::cout << "changeableOutputChannelCount = " << (deviceInfo->changeableOutputChannelCount ? "true" : "false") << std::endl;
 
         std::cout << std::endl;
         std::cout << "--------------------" << std::endl;

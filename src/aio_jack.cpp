@@ -23,25 +23,22 @@
 
 namespace acio {
 
+Jack::Jack()
+{
+    this->deviceInfo.changeableInputChannelCount = true;
+    this->deviceInfo.changeableOutputChannelCount = true;
+    this->deviceInfo.preferredSampleRate = jack_get_sample_rate(this->_client);
+    this->deviceInfo.sampleRates.push_back(deviceInfo.preferredSampleRate);
+    this->deviceInfo.nativeFormats = AudioFormat::FLOAT32;
+}
+
 int Jack::countDevices()
 {
     return 1;
 }
 
-DeviceInfo Jack::getDeviceInfo(int index)
+DeviceInfo* Jack::getDeviceInfo(int index)
 {
-    DeviceInfo deviceInfo;
-    if (index != 0) {
-        return deviceInfo;
-    }
-
-    deviceInfo.changeableInputChannelCount = true;
-    deviceInfo.changeableOutputChannelCount = true;
-    deviceInfo.preferredSampleRate = jack_get_sample_rate(this->_client);
-    deviceInfo.sampleRates.push_back(deviceInfo.preferredSampleRate);
-    deviceInfo.nativeFormats = AudioFormat::FLOAT32;
-
-    return deviceInfo;
+    return &this->deviceInfo;
 }
-
 }

@@ -29,14 +29,17 @@ namespace acio {
 
 class Jack : public Audio {
 public:
+    Jack();
     ~Jack() override = default;
 
 public:
     int countDevices() override;
-    DeviceInfo getDeviceInfo(int index) override;
+    DeviceInfo* getDeviceInfo(int index) override;
 
 private:
-    jack_client_t* _client {nullptr };
+    jack_client_t* _client{ nullptr };
+
+    DeviceInfo deviceInfo{};
 };
 }
 

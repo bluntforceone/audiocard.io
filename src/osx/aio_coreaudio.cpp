@@ -74,8 +74,8 @@ int CoreAudio::countDevices()
     return this->_deviceCount;
 }
 
-DeviceInfo CoreAudio::getDeviceInfo(int index)
+DeviceInfo* CoreAudio::getDeviceInfo(int index)
 {
-    return this->_deviceInfo[index];
+    return &this->_deviceInfo[index];
 }
 }

@@ -122,7 +122,7 @@ void Wasapi::querySampleRates(IAudioClient* pAudioClient, WasapiDeviceInfo& devi
 void Wasapi::queryDevice(IMMDevice* pDevice, WasapiDeviceInfo& deviceInfo, bool input)
 {
     acom::ICom<IAudioEndpointVolume> pAudioEndpointVolume;
-    if (S_OK == pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, (void**)&pAudioEndpointVolume)) {
+    if (S_OK == pDevice->Activate(__uuidof(IAudioEndpointVolume), CLSCTX_ALL, NULL, reinterpret_cast<void**>(&pAudioEndpointVolume))) {
         UINT channelCount{ 0 };
         pAudioEndpointVolume->GetChannelCount(&channelCount);
         if (input) {
@@ -132,7 +132,7 @@ void Wasapi::queryDevice(IMMDevice* pDevice, WasapiDeviceInfo& deviceInfo, bool 
         }
     }
     acom::ICom<IAudioClient> pAudioClient;
-    pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, (void**)&pAudioClient);
+    pDevice->Activate(__uuidof(IAudioClient), CLSCTX_ALL, NULL, reinterpret_cast<void**>(&pAudioClient));
 
     deviceInfo.supportsExclusive = this->supportsExclusive(pAudioClient.obj);
     this->querySampleRates(pAudioClient.obj, deviceInfo);

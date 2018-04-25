@@ -57,6 +57,7 @@ if(BUILD_ALSA)
             src/linux/aio_alsa.cpp
             include/linux/aio_alsa.h
             include/linux/alsa/aio_alsa_ctl.h
+            include/linux/alsa/aio_alsa_deviceinfo.h
             include/linux/alsa/aio_alsa_pcm.h
         )
 endif()
@@ -123,7 +124,7 @@ if(BUILD_WASAPI)
                 include/windows/aio_string.h
                 src/windows/aio_wasapi.cpp
 
-                include/linux/aio_alsa_midi.h src/linux/aio_alsa_midi.cpp include/actl/aio_unique_ptr.h include/linux/alsa/aio_alsa_ctl.h)
+                include/linux/aio_alsa_midi.h src/linux/aio_alsa_midi.cpp include/actl/aio_unique_ptr.h include/linux/alsa/aio_alsa_ctl.h include/linux/alsa/aio_alsa_deviceinfo.h)
     endif()
 endif()
 

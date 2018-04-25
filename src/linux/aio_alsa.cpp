@@ -20,6 +20,7 @@
 
 #include "linux/aio_alsa.h"
 #include "linux/alsa/aio_alsa_ctl.h"
+#include "linux/alsa/aio_alsa_deviceinfo.h"
 #include "linux/alsa/aio_alsa_pcm.h"
 #include <iosfwd>
 #include <sstream>
@@ -29,14 +30,6 @@
 #include <iostream>
 
 namespace acio {
-
-namespace {
-    const unsigned int MAX_SAMPLE_RATES = 14;
-    const unsigned int SAMPLE_RATES[] = {
-        4000, 5512, 8000, 9600, 11025, 16000, 22050,
-        32000, 44100, 48000, 88200, 96000, 176400, 192000
-    };
-}
 
 Alsa::Alsa()
 {
@@ -147,59 +140,6 @@ int Alsa::getAlsaDeviceIndex(int cardIndex, int deviceIndex)
     }
 
     return subDevice;
-}
-
-int getDeviceChannelCount(snd_pcm_stream_t stream, const std::string& deviceId)
-{
-    snd_pcm_info_t* pcmInfo{ nullptr };
-    snd_pcm_info_alloca(&pcmInfo);
-    snd_pcm_hw_params_t* params;
-    snd_pcm_hw_params_alloca(&params);
-    int result = 0;
-
-    snd_pcm_info_set_stream(pcmInfo, stream);
-
-    SndPcm pHandle(deviceId, stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
-    if (!pHandle) {
-        return 0;
-    }
-
-    result = snd_pcm_hw_params_any(&pHandle, params);
-    if (result < 0) {
-        return 0;
-    }
-
-    unsigned int value{ 0 };
-    result = snd_pcm_hw_params_get_channels_max(params, &value);
-
-    return (result == 0 ? value : 0);
-}
-
-auto getDeviceSampleRates(snd_pcm_stream_t stream, const std::string& deviceId)
-{
-    auto sampleRates = std::vector<unsigned int>();
-
-    SndPcm pHandle(deviceId, stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
-
-    if (!pHandle) {
-        return sampleRates;
-    }
-
-    snd_pcm_hw_params_t* params;
-    snd_pcm_hw_params_alloca(&params);
-
-    int result = snd_pcm_hw_params_any(&pHandle, params);
-    if (result < 0) {
-        return sampleRates;
-    }
-
-    for (unsigned int i = 0; i < MAX_SAMPLE_RATES; i++) {
-        if (snd_pcm_hw_params_test_rate(&pHandle, params, SAMPLE_RATES[i], 0) == 0) {
-            sampleRates.push_back(SAMPLE_RATES[i]);
-        }
-    }
-
-    return sampleRates;
 }
 
 DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)

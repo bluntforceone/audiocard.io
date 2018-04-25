@@ -20,6 +20,7 @@
 
 #include "linux/aio_alsa.h"
 #include "linux/alsa/aio_alsa_ctl.h"
+#include "linux/alsa/aio_alsa_pcm.h"
 #include <iosfwd>
 #include <sstream>
 
@@ -161,22 +162,19 @@ int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardI
     snd_pcm_info_set_stream(pcmInfo, stream);
 
     int openMode = SND_PCM_ASYNC;
-    snd_pcm_t* pHandle{ nullptr };
 
-    result = snd_pcm_open(&pHandle, alsaDeviceName(cardIndex, alsaDeviceIndex).c_str(), stream, openMode | SND_PCM_NONBLOCK);
-    if (result < 0) {
+    SndPcm pHandle(alsaDeviceName(cardIndex, alsaDeviceIndex).c_str(), stream, openMode | SND_PCM_NONBLOCK);
+    if (!pHandle) {
         return 0;
     }
 
-    result = snd_pcm_hw_params_any(pHandle, params);
+    result = snd_pcm_hw_params_any(&pHandle, params);
     if (result < 0) {
-        snd_pcm_close(pHandle);
         return 0;
     }
 
     unsigned int value{ 0 };
     result = snd_pcm_hw_params_get_channels_max(params, &value);
-    snd_pcm_close(pHandle);
 
     return (result == 0 ? value : 0);
 }
@@ -189,29 +187,26 @@ auto getDeviceSampleRates(snd_pcm_stream_t stream, int cardIndex, int deviceInde
 
     auto deviceName = alsaDeviceName(cardIndex, deviceIndex);
 
-    snd_pcm_t* pHandle{ nullptr };
+    SndPcm pHandle(deviceName.c_str(), stream, openMode | SND_PCM_NONBLOCK);
 
-    int result = snd_pcm_open(&pHandle, deviceName.c_str(), stream, openMode | SND_PCM_NONBLOCK);
-    if (result < 0) {
+    if (!pHandle) {
         return sampleRates;
     }
 
     snd_pcm_hw_params_t* params;
     snd_pcm_hw_params_alloca(&params);
 
-    result = snd_pcm_hw_params_any(pHandle, params);
+    int result = snd_pcm_hw_params_any(&pHandle, params);
     if (result < 0) {
-        snd_pcm_close(pHandle);
         return sampleRates;
     }
 
     for (unsigned int i = 0; i < MAX_SAMPLE_RATES; i++) {
-        if (snd_pcm_hw_params_test_rate(pHandle, params, SAMPLE_RATES[i], 0) == 0) {
+        if (snd_pcm_hw_params_test_rate(&pHandle, params, SAMPLE_RATES[i], 0) == 0) {
             sampleRates.push_back(SAMPLE_RATES[i]);
         }
     }
 
-    snd_pcm_close(pHandle);
     return sampleRates;
 }
 

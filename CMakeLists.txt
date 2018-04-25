@@ -57,6 +57,7 @@ if(BUILD_ALSA)
             src/linux/aio_alsa.cpp
             include/linux/aio_alsa.h
             include/linux/alsa/aio_alsa_ctl.h
+            include/linux/alsa/aio_alsa_pcm.h
         )
 endif()
 

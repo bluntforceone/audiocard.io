@@ -161,9 +161,7 @@ int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardI
 
     snd_pcm_info_set_stream(pcmInfo, stream);
 
-    int openMode = SND_PCM_ASYNC;
-
-    SndPcm pHandle(alsaDeviceName(cardIndex, alsaDeviceIndex).c_str(), stream, openMode | SND_PCM_NONBLOCK);
+    SndPcm pHandle(alsaDeviceName(cardIndex, alsaDeviceIndex).c_str(), stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
     if (!pHandle) {
         return 0;
     }
@@ -183,11 +181,9 @@ auto getDeviceSampleRates(snd_pcm_stream_t stream, int cardIndex, int deviceInde
 {
     auto sampleRates = std::vector<unsigned int>();
 
-    int openMode = SND_PCM_ASYNC;
-
     auto deviceName = alsaDeviceName(cardIndex, deviceIndex);
 
-    SndPcm pHandle(deviceName.c_str(), stream, openMode | SND_PCM_NONBLOCK);
+    SndPcm pHandle(deviceName.c_str(), stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
 
     if (!pHandle) {
         return sampleRates;

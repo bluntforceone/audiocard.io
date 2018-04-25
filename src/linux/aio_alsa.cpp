@@ -55,7 +55,7 @@ Alsa::Alsa()
     }
 }
 
-std::string alsaDeviceName(int cardIndex, int deviceIndex = -1)
+std::string alsaDeviceId(int cardIndex, int deviceIndex = -1)
 {
     std::stringstream name;
     if (cardIndex > -1) {
@@ -69,7 +69,7 @@ std::string alsaDeviceName(int cardIndex, int deviceIndex = -1)
     return name.str();
 }
 
-std::string cardName(int cardIndex, int subdevice)
+std::string deviceDisplayName(int cardIndex, int subdevice)
 {
     if (cardIndex == -1) {
         return "default";
@@ -108,7 +108,7 @@ int Alsa::countCards()
 
     while ((snd_card_next(&cardIndex) == 0) && (cardIndex != -1)) {
 
-        SndCtl handle(alsaDeviceName(cardIndex).c_str(), 0);
+        SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
 
         if (handle) {
             ++cardCount;
@@ -122,7 +122,7 @@ int Alsa::countCardDevices(int cardIndex)
     int deviceCount{ 0 };
     int subDevice{ -1 };
 
-    SndCtl handle(alsaDeviceName(cardIndex).c_str(), 0);
+    SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
 
     if (!handle) {
         return 0;
@@ -137,7 +137,7 @@ int Alsa::countCardDevices(int cardIndex)
 
 int Alsa::getAlsaDeviceIndex(int cardIndex, int deviceIndex)
 {
-    SndCtl handle(alsaDeviceName(cardIndex).c_str(), 0);
+    SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
 
     int subDevice = -1;
     for (int currentIndex = 0; currentIndex < (deviceIndex + 1); ++currentIndex) {
@@ -149,7 +149,7 @@ int Alsa::getAlsaDeviceIndex(int cardIndex, int deviceIndex)
     return subDevice;
 }
 
-int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardIndex, int alsaDeviceIndex)
+int getDeviceChannelCount(snd_pcm_stream_t stream, const std::string& deviceId)
 {
     snd_pcm_info_t* pcmInfo{ nullptr };
     snd_pcm_info_alloca(&pcmInfo);
@@ -159,7 +159,7 @@ int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardI
 
     snd_pcm_info_set_stream(pcmInfo, stream);
 
-    SndPcm pHandle(alsaDeviceName(cardIndex, alsaDeviceIndex).c_str(), stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
+    SndPcm pHandle(deviceId, stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
     if (!pHandle) {
         return 0;
     }
@@ -175,13 +175,11 @@ int getDeviceChannelCount(snd_pcm_stream_t stream, snd_ctl_t* cHandle, int cardI
     return (result == 0 ? value : 0);
 }
 
-auto getDeviceSampleRates(snd_pcm_stream_t stream, int cardIndex, int deviceIndex)
+auto getDeviceSampleRates(snd_pcm_stream_t stream, const std::string& deviceId)
 {
     auto sampleRates = std::vector<unsigned int>();
 
-    auto deviceName = alsaDeviceName(cardIndex, deviceIndex);
-
-    SndPcm pHandle(deviceName.c_str(), stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
+    SndPcm pHandle(deviceId, stream, SND_PCM_ASYNC | SND_PCM_NONBLOCK);
 
     if (!pHandle) {
         return sampleRates;
@@ -210,17 +208,19 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
 
     int alsaDeviceIndex = this->getAlsaDeviceIndex(cardIndex, deviceIndex);
 
-    SndCtl cHandle(alsaDeviceName(cardIndex).c_str(), SND_CTL_NONBLOCK);
+    SndCtl cHandle(alsaDeviceId(cardIndex), SND_CTL_NONBLOCK);
 
     if (!cHandle) {
         return deviceInfo;
     }
 
-    deviceInfo.outputChannels = getDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, &cHandle, cardIndex, alsaDeviceIndex);
-    deviceInfo.inputChannels = getDeviceChannelCount(SND_PCM_STREAM_CAPTURE, &cHandle, cardIndex, alsaDeviceIndex);
+    const auto deviceId = alsaDeviceId(cardIndex, alsaDeviceIndex);
+
+    deviceInfo.outputChannels = getDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, deviceId);
+    deviceInfo.inputChannels = getDeviceChannelCount(SND_PCM_STREAM_CAPTURE, deviceId);
     auto maxChannelsStream = deviceInfo.inputChannels > deviceInfo.outputChannels ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK;
-    deviceInfo.sampleRates = getDeviceSampleRates(maxChannelsStream, cardIndex, alsaDeviceIndex);
-    deviceInfo.name = cardName(cardIndex, alsaDeviceIndex);
+    deviceInfo.sampleRates = getDeviceSampleRates(maxChannelsStream, deviceId);
+    deviceInfo.name = deviceDisplayName(cardIndex, alsaDeviceIndex);
 
     return deviceInfo;
 }

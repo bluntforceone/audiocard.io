@@ -218,10 +218,9 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
         return deviceInfo;
     }
 
-    auto maxChannelsStream = deviceInfo.inputChannels > deviceInfo.outputChannels ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK;
-
     deviceInfo.outputChannels = getDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, &cHandle, cardIndex, alsaDeviceIndex);
     deviceInfo.inputChannels = getDeviceChannelCount(SND_PCM_STREAM_CAPTURE, &cHandle, cardIndex, alsaDeviceIndex);
+    auto maxChannelsStream = deviceInfo.inputChannels > deviceInfo.outputChannels ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK;
     deviceInfo.sampleRates = getDeviceSampleRates(maxChannelsStream, cardIndex, alsaDeviceIndex);
     deviceInfo.name = cardName(cardIndex, alsaDeviceIndex);
 

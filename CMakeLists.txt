@@ -31,7 +31,9 @@ if (BUILD_JACK)
 endif(BUILD_JACK)
 
 
-set(SOURCES include/aio_audio.h)
+set(SOURCES
+        include/aio_audio.h
+        include/actl/aio_unique_ptr.h)
 
 
 if(BUILD_COREAUDIO)
@@ -54,6 +56,7 @@ if(BUILD_ALSA)
 
             src/linux/aio_alsa.cpp
             include/linux/aio_alsa.h
+            include/linux/alsa/aio_alsa_ctl.h
         )
 endif()
 
@@ -119,7 +122,7 @@ if(BUILD_WASAPI)
                 include/windows/aio_string.h
                 src/windows/aio_wasapi.cpp
 
-                )
+                include/linux/aio_alsa_midi.h src/linux/aio_alsa_midi.cpp include/actl/aio_unique_ptr.h include/linux/alsa/aio_alsa_ctl.h)
     endif()
 endif()
 

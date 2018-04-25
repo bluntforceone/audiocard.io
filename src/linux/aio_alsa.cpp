@@ -122,8 +122,6 @@ int Alsa::countCardDevices(int cardIndex)
     int deviceCount{ 0 };
     int subDevice{ -1 };
 
-    std::stringstream name;
-
     SndCtl handle(alsaDeviceName(cardIndex).c_str(), 0);
 
     if (!handle) {

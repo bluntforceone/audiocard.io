@@ -36,7 +36,11 @@ const std::array<unsigned int, MAX_SAMPLE_RATES> SAMPLE_RATES{
 
 Wasapi::Wasapi()
 {
+    this->enumDevices();
+}
 
+void Wasapi::enumDevices()
+{
     acom::ICom<IMMDeviceCollection> pDevices;
     acom::ICom<IMMDeviceEnumerator> deviceEnumerator(__uuidof(MMDeviceEnumerator));
 
@@ -57,11 +61,8 @@ Wasapi::Wasapi()
 
 void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, bool input)
 {
-    std::vector<WasapiDeviceInfo>& devices = input ? this->inputDevices : this->outputDevices;
-
     UINT count = 0;
     pDevices->GetCount(&count);
-    devices.resize(count);
 
     for (UINT index = 0; index < count; ++index) {
         acom::ICom<IMMDevice> pDevice;
@@ -70,9 +71,10 @@ void Wasapi::enumDeviceEnumerator(IMMDeviceCollection* pDevices, bool input)
             pDevice->OpenPropertyStore(STGM_READ, &pPropertyStore);
             acom::PropVariant propertyName;
             pPropertyStore->GetValue(PKEY_Device_FriendlyName, &propertyName);
-            devices[index].name = string_cast<std::string>(propertyName->pwszVal);
-
-            this->queryDevice(pDevice.obj, devices[index], input);
+            auto deviceInfo = WasapiDeviceInfo();
+            deviceInfo.name = string_cast<std::string>(propertyName->pwszVal);
+            this->queryDevice(pDevice.obj, deviceInfo, input);
+            this->_devices.emplace_back(deviceInfo);
         }
     }
 }
@@ -105,8 +107,8 @@ void Wasapi::querySampleRates(IAudioClient* pAudioClient, WasapiDeviceInfo& devi
         WaveFormatEx formatEx(WAVE_FORMAT_IEEE_FLOAT, pFormat->Format.nChannels, testSampleRate);
 
         HRESULT hr = pAudioClient->IsFormatSupported(exclusive ? AUDCLNT_SHAREMODE_EXCLUSIVE : AUDCLNT_SHAREMODE_SHARED,
-                                                     reinterpret_cast<WAVEFORMATEX*>(&formatEx),
-                                                     exclusive ? nullptr : reinterpret_cast<WAVEFORMATEX**>(&pSupported));
+            reinterpret_cast<WAVEFORMATEX*>(&formatEx),
+            exclusive ? nullptr : reinterpret_cast<WAVEFORMATEX**>(&pSupported));
         if (!exclusive && pSupported != nullptr) {
             CoTaskMemFree(pSupported);
             pSupported = nullptr;
@@ -140,14 +142,25 @@ void Wasapi::queryDevice(IMMDevice* pDevice, WasapiDeviceInfo& deviceInfo, bool 
 
 int Wasapi::countDevices()
 {
-    return static_cast<int>(this->inputDevices.size() + this->outputDevices.size());
+    return static_cast<int>(this->_devices.size());
 }
 
-DeviceInfo* Wasapi::getDeviceInfo(int index)
+DeviceInfo* Wasapi::getDeviceInfo(int64_t deviceId)
 {
-    if (index >= 0 && index < this->inputDevices.size()) {
-        return &this->inputDevices[index];
+    auto idMap = IntDeviceIdMap(deviceId);
+    if (idMap.intIndex >= this->_devices.size()) {
+        return nullptr;
     }
-    return &this->outputDevices[index - this->inputDevices.size()];
+    return &this->_devices[idMap.intIndex];
+}
+
+std::vector<int64_t> Wasapi::deviceIds()
+{
+    std::vector<int64_t> ids;
+    for (int index = 0; index < this->_devices.size(); ++index) {
+        auto idMap = IntDeviceIdMap::fromInt(index);
+        ids.emplace_back(idMap.deviceId);
+    }
+    return ids;
 }
 }

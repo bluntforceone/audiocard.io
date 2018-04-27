@@ -34,6 +34,7 @@ namespace acio {
 
 struct WasapiDeviceInfo : public DeviceInfo {
     bool supportsExclusive{ false };
+    bool input{ false };
 };
 
 class Wasapi : public Audio {
@@ -44,20 +45,21 @@ public:
 
 public:
     int countDevices() override;
+    DeviceInfo* getDeviceInfo(int64_t index) override;
 
-    DeviceInfo* getDeviceInfo(int index) override;
+    std::vector<int64_t> deviceIds() override;
+
+    void enumDevices();
 
 private:
     acom::CoInit coInit{ COINIT_APARTMENTTHREADED };
-    std::vector<WasapiDeviceInfo> inputDevices;
-    std::vector<WasapiDeviceInfo> outputDevices;
+    std::vector<WasapiDeviceInfo> _devices;
 
     void enumDeviceEnumerator(IMMDeviceCollection* enumerator, bool input);
 
     void queryDevice(IMMDevice* pDevice, WasapiDeviceInfo& deviceInfo, bool input);
     void querySampleRates(IAudioClient* pAudioClient, WasapiDeviceInfo& deviceInfo);
     bool supportsExclusive(IAudioClient* pAudioClient);
-
 };
 }
 #endif //AUDIOCARD_IO_WASAPI_H

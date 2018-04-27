@@ -18,39 +18,78 @@
  *                                                                                                  *
  ***************************************************************************************************/
 
-#ifndef AUDIOCARD_IO_ALSA_H
-#define AUDIOCARD_IO_ALSA_H
+#ifndef AUDIOCARD_IO_ALSA_CARDINFO_H
+#define AUDIOCARD_IO_ALSA_CARDINFO_H
 
-#include "aio_audio.h"
-#include <map>
+
+#include "linux/alsa/aio_alsa_deviceinfo.h"
+#include "linux/alsa/aio_alsa_ctl.h"
+#include "linux/alsa/aio_alsa_pcm.h"
+#include <alsa/asoundlib.h>
+#include <array>
+#include <sstream>
+#include <string>
+#include <vector>
 
 namespace acio {
 
-class Alsa : public Audio {
-public:
-    struct AlsaDeviceInfo : public DeviceInfo {
-        int cardId {0};
-        int deviceId {0};
-    };
-public:
-    Alsa();
-    ~Alsa() override = default;
+inline int alsaCountCards() {
+    int cardCount{0};
+    int cardIndex{-1};
 
-public:
-    int countDevices() override;
-    DeviceInfo* getDeviceInfo(int64_t deviceId) override;
+    while ((snd_card_next(&cardIndex) == 0) && (cardIndex != -1)) {
 
+        SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
 
-    std::vector<int64_t> deviceIds() override;
-    void enumDevices();
+        if (handle) {
+            ++cardCount;
+        }
+    }
 
-private:
-    bool hasDefault();
-    AlsaDeviceInfo getCardDeviceInfo(int cardIndex, int deviceIndex);
-
-private:
-    std::map<int, std::map<int, AlsaDeviceInfo>> _cardMap;
-};
+    return cardCount;
 }
 
-#endif //AUDIOCARD_IO_ALSA_H
+inline std::vector<int> alsaCardIds() {
+    auto cardIds = std::vector<int>();
+
+    int cardIndex{-1};
+
+    while ((snd_card_next(&cardIndex) == 0) && (cardIndex != -1)) {
+
+        SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
+        if (handle) {
+            cardIds.emplace_back(cardIndex);
+        }
+    }
+
+    return cardIds;
+}
+
+inline std::vector<int> alsaPcmDeviceIds(int cardId) {
+    auto deviceIds = std::vector<int>();
+
+    SndCtl handle(alsaDeviceId(cardId), 0);
+    int deviceId{-1};
+
+    while ((snd_ctl_pcm_next_device(&handle, &deviceId) == 0) && (deviceId != -1)) {
+        deviceIds.emplace_back(deviceId);
+    }
+
+    return deviceIds;
+}
+
+inline std::vector<int> alsaMidiDeviceIds(int cardId) {
+    auto deviceIds = std::vector<int>();
+
+    SndCtl handle(alsaDeviceId(cardId), 0);
+    int deviceId{-1};
+
+    while ((snd_ctl_rawmidi_next_device(&handle, &deviceId) == 0) && (deviceId != -1)) {
+        deviceIds.emplace_back(deviceId);
+    }
+
+    return deviceIds;
+}
+}
+
+#endif //AUDIOCARD_IO_ALSA_CARDINFO_H

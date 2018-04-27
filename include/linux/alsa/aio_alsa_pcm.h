@@ -26,6 +26,8 @@
 
 typedef struct _snd_ctl snd_ctl_t;
 
+namespace acio {
+
 class SndPcm : public custom_unique_ptr<snd_pcm_t> {
 public:
     SndPcm(const std::string& name, snd_pcm_stream_t stream, int mode)
@@ -46,5 +48,5 @@ public:
         return this->get();
     }
 };
-
+}
 #endif //AUDIOCARD_IO_ALSA_PCM_H

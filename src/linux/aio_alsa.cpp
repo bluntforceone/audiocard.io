@@ -19,10 +19,12 @@
  ***************************************************************************************************/
 
 #include "linux/aio_alsa.h"
+#include "linux/alsa/aio_alsa_cardinfo.h"
 #include "linux/alsa/aio_alsa_ctl.h"
 #include "linux/alsa/aio_alsa_deviceinfo.h"
 #include "linux/alsa/aio_alsa_pcm.h"
 #include <iosfwd>
+#include <map>
 #include <sstream>
 
 #include <bits/unique_ptr.h>
@@ -31,51 +33,27 @@
 
 namespace acio {
 
+struct AlsaDeviceIdMap {
+    union {
+        int64_t deviceId;
+        struct {
+            int32_t alsaCardId;
+            int32_t alsaDeviceId;
+        };
+    };
+    AlsaDeviceIdMap(int64_t deviceId_)
+        : deviceId(deviceId_)
+    {
+    }
+    AlsaDeviceIdMap(int32_t alsaCardId_, int32_t alsaDeviceId_)
+            : alsaCardId(alsaCardId_), alsaDeviceId(alsaDeviceId_)
+    {
+    }
+};
+
 Alsa::Alsa()
 {
-    int cardCount = this->countCards();
-    this->_deviceCount = 0;
-    for (int cardIndex = 0; cardIndex < cardCount; ++cardIndex) {
-        int cardDeviceCount = this->countCardDevices(cardIndex);
-        for (int cardDeviceIndex = 0; cardDeviceIndex < cardDeviceCount; ++cardDeviceIndex) {
-            this->_deviceInfo.emplace_back(this->getCardDeviceInfo(cardIndex, cardDeviceIndex));
-            ++this->_deviceCount;
-        }
-    }
-    if (this->hasDefault()) {
-        this->_deviceInfo.emplace_back(this->getCardDeviceInfo(-1, -1));
-        ++this->_deviceCount;
-    }
-}
-
-std::string alsaDeviceId(int cardIndex, int deviceIndex = -1)
-{
-    std::stringstream name;
-    if (cardIndex > -1) {
-        name << "hw:" << cardIndex;
-        if (deviceIndex > -1) {
-            name << "," << deviceIndex;
-        }
-    } else {
-        name << "default";
-    }
-    return name.str();
-}
-
-std::string deviceDisplayName(int cardIndex, int subdevice)
-{
-    if (cardIndex == -1) {
-        return "default";
-    }
-
-    std::stringstream sCardName;
-    char* cardname{ nullptr };
-    int result = snd_card_get_name(cardIndex, &cardname);
-    if (result >= 0) {
-        sCardName << "hw:" << cardname << "," << subdevice;
-        free(cardname);
-    }
-    return sCardName.str();
+    this->enumDevices();
 }
 
 bool Alsa::hasDefault()
@@ -86,67 +64,29 @@ bool Alsa::hasDefault()
 
 int Alsa::countDevices()
 {
-    return this->_deviceCount;
+    return this->deviceIds().size();
 }
 
-DeviceInfo* Alsa::getDeviceInfo(int index)
+DeviceInfo* Alsa::getDeviceInfo(int64_t deviceId)
 {
-    return &this->_deviceInfo[index];
-}
+    AlsaDeviceIdMap internalDeviceId(deviceId);
 
-int Alsa::countCards()
-{
-    int cardCount{ 0 };
-    int cardIndex{ -1 };
-
-    while ((snd_card_next(&cardIndex) == 0) && (cardIndex != -1)) {
-
-        SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
-
-        if (handle) {
-            ++cardCount;
-        }
+    auto cardIterator = this->_cardMap.find(internalDeviceId.alsaCardId);
+    if (cardIterator == this->_cardMap.end()) {
+        return nullptr;
     }
 
-    return cardCount;
-}
-int Alsa::countCardDevices(int cardIndex)
-{
-    int deviceCount{ 0 };
-    int subDevice{ -1 };
-
-    SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
-
-    if (!handle) {
-        return 0;
+    auto deviceIterator = (*cardIterator).second.find(internalDeviceId.alsaDeviceId);
+    if (deviceIterator == (*cardIterator).second.end()) {
+        return nullptr;
     }
 
-    while ((snd_ctl_pcm_next_device(&handle, &subDevice) == 0) && (subDevice != -1)) {
-        ++deviceCount;
-    }
-
-    return deviceCount;
+    return &(*deviceIterator).second;
 }
 
-int Alsa::getAlsaDeviceIndex(int cardIndex, int deviceIndex)
+Alsa::AlsaDeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
 {
-    SndCtl handle(alsaDeviceId(cardIndex).c_str(), 0);
-
-    int subDevice = -1;
-    for (int currentIndex = 0; currentIndex < (deviceIndex + 1); ++currentIndex) {
-        if (snd_ctl_pcm_next_device(&handle, &subDevice) != 0) {
-            return -1;
-        }
-    }
-
-    return subDevice;
-}
-
-DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
-{
-    DeviceInfo deviceInfo{};
-
-    int alsaDeviceIndex = this->getAlsaDeviceIndex(cardIndex, deviceIndex);
+    AlsaDeviceInfo deviceInfo{};
 
     SndCtl cHandle(alsaDeviceId(cardIndex), SND_CTL_NONBLOCK);
 
@@ -154,14 +94,48 @@ DeviceInfo Alsa::getCardDeviceInfo(int cardIndex, int deviceIndex)
         return deviceInfo;
     }
 
-    const auto deviceId = alsaDeviceId(cardIndex, alsaDeviceIndex);
+    const auto deviceId = alsaDeviceId(cardIndex, deviceIndex);
 
-    deviceInfo.outputChannels = getDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, deviceId);
-    deviceInfo.inputChannels = getDeviceChannelCount(SND_PCM_STREAM_CAPTURE, deviceId);
+    deviceInfo.outputChannels = aslaDeviceChannelCount(SND_PCM_STREAM_PLAYBACK, deviceId);
+    deviceInfo.inputChannels = aslaDeviceChannelCount(SND_PCM_STREAM_CAPTURE, deviceId);
     auto maxChannelsStream = deviceInfo.inputChannels > deviceInfo.outputChannels ? SND_PCM_STREAM_CAPTURE : SND_PCM_STREAM_PLAYBACK;
-    deviceInfo.sampleRates = getDeviceSampleRates(maxChannelsStream, deviceId);
-    deviceInfo.name = deviceDisplayName(cardIndex, alsaDeviceIndex);
+    deviceInfo.sampleRates = aslaDeviceSampleRates(maxChannelsStream, deviceId);
+    deviceInfo.name = aslaDisplayName(cardIndex, deviceIndex);
 
     return deviceInfo;
+}
+
+void Alsa::enumDevices()
+{
+    auto cardIds = alsaCardIds();
+
+    for (auto cardId : cardIds) {
+        auto deviceMap = std::map<int, AlsaDeviceInfo>();
+        auto deviceIds = alsaPcmDeviceIds(cardId);
+
+        for (auto deviceId : deviceIds) {
+            deviceMap.emplace(deviceId, this->getCardDeviceInfo(cardId, deviceId));
+        }
+        if (deviceMap.size() > 0) {
+            this->_cardMap.emplace(cardId, std::move(deviceMap));
+        }
+    }
+
+    if (this->hasDefault()) {
+        auto deviceMap = std::map<int, AlsaDeviceInfo>();
+        deviceMap.emplace(-1, this->getCardDeviceInfo(-1, -1));
+        this->_cardMap.emplace(-1, std::move(deviceMap));
+    }
+}
+
+std::vector<int64_t> Alsa::deviceIds()
+{
+    std::vector<int64_t> ids;
+    for (auto& card : this->_cardMap) {
+        for (auto& device : card.second) {
+            ids.emplace_back(AlsaDeviceIdMap(card.first, device.first).deviceId);
+        }
+    }
+    return ids;
 }
 }

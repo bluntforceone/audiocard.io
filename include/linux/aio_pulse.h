@@ -32,7 +32,9 @@ public:
 
 public:
     int countDevices() override;
-    DeviceInfo* getDeviceInfo(int index) override;
+    DeviceInfo* getDeviceInfo(int64_t index) override;
+
+    std::vector<int64_t> deviceIds() override;
 
 private:
     DeviceInfo deviceInfo{};

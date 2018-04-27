@@ -26,6 +26,8 @@
 
 typedef struct _snd_ctl snd_ctl_t;
 
+namespace acio {
+
 class SndCtl : public custom_unique_ptr<snd_ctl_t> {
 public:
     SndCtl(const std::string& name, const int mode)
@@ -46,5 +48,5 @@ public:
         return this->get();
     }
 };
-
+}
 #endif //AUDIOCARD_IO_ALSA_CTL_H

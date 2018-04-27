@@ -24,9 +24,12 @@
 #include "linux/alsa/aio_alsa_pcm.h"
 #include <alsa/asoundlib.h>
 #include <array>
+#include <sstream>
 #include <string>
 
-inline int getDeviceChannelCount(snd_pcm_stream_t stream, const std::string& deviceId)
+namespace acio {
+
+inline int aslaDeviceChannelCount(snd_pcm_stream_t stream, const std::string& deviceId)
 {
     snd_pcm_info_t* pcmInfo{ nullptr };
     snd_pcm_info_alloca(&pcmInfo);
@@ -52,7 +55,7 @@ inline int getDeviceChannelCount(snd_pcm_stream_t stream, const std::string& dev
     return (result == 0 ? value : 0);
 }
 
-inline auto getDeviceSampleRates(snd_pcm_stream_t stream, const std::string& deviceId)
+inline auto aslaDeviceSampleRates(snd_pcm_stream_t stream, const std::string& deviceId)
 {
     constexpr std::array<unsigned int, 14> SAMPLE_RATES{
         4000, 5512, 8000, 9600, 11025, 16000, 22050,
@@ -84,4 +87,34 @@ inline auto getDeviceSampleRates(snd_pcm_stream_t stream, const std::string& dev
     return sampleRates;
 }
 
+inline std::string alsaDeviceId(int cardIndex, int deviceIndex = -1)
+{
+    std::stringstream name;
+    if (cardIndex > -1) {
+        name << "hw:" << cardIndex;
+        if (deviceIndex > -1) {
+            name << "," << deviceIndex;
+        }
+    } else {
+        name << "default";
+    }
+    return name.str();
+}
+
+inline std::string aslaDisplayName(int cardIndex, int subdevice)
+{
+    if (cardIndex == -1) {
+        return "default";
+    }
+
+    std::stringstream sCardName;
+    char* cardname{ nullptr };
+    int result = snd_card_get_name(cardIndex, &cardname);
+    if (result >= 0) {
+        sCardName << "hw:" << cardname << "," << subdevice;
+        free(cardname);
+    }
+    return sCardName.str();
+}
+}
 #endif //AUDIOCARD_IO_ALSA_DEVICEINFO_H

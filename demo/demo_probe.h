@@ -22,20 +22,21 @@
 #define AUDIOCARD_IO_DEMO_PROBE_H
 
 #include <iostream>
+#include <vector>
 
 template<typename T>
 void Probe()
 {
     T api;
 
-    int deviceCount = api.countDevices();
+    auto deviceIds = api.deviceIds();
 
     std::cout << std::dec;
 
-    std::cout << "countDevices:" << deviceCount << std::endl;
+    std::cout << "countDevices:" << deviceIds.size() << std::endl;
 
-    for (int index = 0; index < deviceCount; ++index) {
-        auto deviceInfo = api.getDeviceInfo(index);
+    for (auto deviceId : deviceIds) {
+        auto deviceInfo = api.getDeviceInfo(deviceId);
         std::cout << "--------------------" << std::endl;
         std::cout << "name:" << deviceInfo->name << std::endl;
         std::cout << "outputChannels:" << deviceInfo->outputChannels << std::endl;

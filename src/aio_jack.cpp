@@ -37,8 +37,15 @@ int Jack::countDevices()
     return 1;
 }
 
-DeviceInfo* Jack::getDeviceInfo(int index)
+DeviceInfo* Jack::getDeviceInfo(int64_t)
 {
     return &this->deviceInfo;
+}
+
+std::vector<int64_t> Jack::deviceIds()
+{
+    std::vector<int64_t> ids;
+    ids.emplace_back(1);
+    return ids;
 }
 }

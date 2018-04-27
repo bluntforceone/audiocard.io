@@ -90,6 +90,24 @@ inline std::vector<int> alsaMidiDeviceIds(int cardId) {
 
     return deviceIds;
 }
+
+struct AlsaDeviceIdMap {
+    union {
+        int64_t deviceId;
+        struct {
+            int32_t alsaCardId;
+            int32_t alsaDeviceId;
+        };
+    };
+    AlsaDeviceIdMap(int64_t deviceId_)
+            : deviceId(deviceId_)
+    {
+    }
+    AlsaDeviceIdMap(int32_t alsaCardId_, int32_t alsaDeviceId_)
+            : alsaCardId(alsaCardId_), alsaDeviceId(alsaDeviceId_)
+    {
+    }
+};
 }
 
 #endif //AUDIOCARD_IO_ALSA_CARDINFO_H

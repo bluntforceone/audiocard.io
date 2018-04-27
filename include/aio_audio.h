@@ -79,6 +79,29 @@ public:
 };
 
 inline Audio::~Audio() = default;
+
+
+struct IntDeviceIdMap {
+    union {
+        int64_t deviceId {0};
+        struct {
+            int intIndex;
+        };
+    };
+    IntDeviceIdMap() = default;
+    IntDeviceIdMap(int64_t deviceId_)
+            : deviceId(deviceId_)
+    {
+    }
+    static IntDeviceIdMap fromInt(int index)
+    {
+        IntDeviceIdMap idMap;
+        idMap.intIndex = index;
+        return idMap;
+    }
+};
+
+
 }
 
 #endif //AUDIOCARD_IO_AUDIO_H

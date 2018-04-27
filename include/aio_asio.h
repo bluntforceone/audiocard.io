@@ -36,7 +36,11 @@ public:
     ~Asio() override = default;
 public:
     int countDevices() override;
-    DeviceInfo * getDeviceInfo(int index) override;
+    DeviceInfo * getDeviceInfo(int64_t deviceId) override;
+
+    std::vector<int64_t> deviceIds() override;
+
+    void enumDevices();
 
 private:
     AsioDrivers asioDrivers;

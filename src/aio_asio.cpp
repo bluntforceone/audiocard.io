@@ -36,26 +36,47 @@ namespace {
     };
 }
 
+struct AsioDeviceIdMap {
+    union {
+        int64_t deviceId {0};
+        struct {
+            int asioIndex;
+        };
+    };
+    AsioDeviceIdMap() = default;
+    AsioDeviceIdMap(int64_t deviceId_)
+            : deviceId(deviceId_)
+    {
+    }
+    static AsioDeviceIdMap fromInt(int asioIndex)
+    {
+        AsioDeviceIdMap idMap;
+        idMap.asioIndex = asioIndex;
+        return idMap;
+    }
+};
+
 Asio::Asio()
 {
-    const int maxDrivers = 32;
+    this->enumDevices();
+}
 
-    std::array<char*, maxDrivers> driverNamesPtr;
-    std::array<std::array<char, 32>, maxDrivers> driverBuffers;
-    for (int index = 0; index < maxDrivers; ++index) {
-        driverNamesPtr[index] = driverBuffers[index].data();
-    }
+void Asio::enumDevices()
+{
+    auto driverCount = this->asioDrivers.asioGetNumDev();
 
-    auto driverCount = this->asioDrivers.getDriverNames(driverNamesPtr.data(), maxDrivers);
     for (long index = 0; index < driverCount; ++index) {
-        DeviceInfo deviceInfo;
+        auto driverName = std::string();
+        driverName.resize(32);
+        this->asioDrivers.asioGetDriverName(index, driverName.data(), 32);
+        this->asioDrivers.loadDriver(driverName.c_str());
 
-        deviceInfo.name = driverNamesPtr[index];
-        this->asioDrivers.loadDriver(driverNamesPtr[index]);
-
-        ASIODriverInfo driverInfo{};
+        auto driverInfo = ASIODriverInfo();
         ASIOInit(&driverInfo);
 
+        auto deviceInfo = DeviceInfo();
+
+        deviceInfo.name = driverName;
         long inputChannels{ 0 };
         long outputChannels{ 0 };
 
@@ -107,8 +128,23 @@ int Asio::countDevices()
     return static_cast<int>(this->devices.size());
 }
 
-DeviceInfo* Asio::getDeviceInfo(int index)
+DeviceInfo* Asio::getDeviceInfo(int64_t deviceId)
 {
-    return &this->devices[index];
+    auto idMap = AsioDeviceIdMap(deviceId);
+    if (idMap.asioIndex >= this->devices.size()) {
+        return nullptr;
+    }
+    return &this->devices[idMap.asioIndex];
+}
+
+std::vector<int64_t> Asio::deviceIds()
+{
+    std::vector<int64_t> ids;
+    for (int index = 0; index < this->devices.size(); ++index)
+    {
+        auto idMap = AsioDeviceIdMap::fromInt(index);
+        ids.emplace_back(idMap.deviceId);
+    }
+    return ids;
 }
 }

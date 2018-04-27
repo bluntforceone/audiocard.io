@@ -23,6 +23,21 @@
 
 namespace acio {
 
+struct CoreAudioIdMap {
+    union {
+        int64_t deviceId;
+        int32_t coreAudioCardId;
+    };
+    CoreAudioIdMap(int64_t deviceId_)
+        : deviceId(deviceId_)
+    {
+    }
+    CoreAudioIdMap(AudioObjectID coreAudioCardId_)
+        : coreAudioCardId(coreAudioCardId_)
+    {
+    }
+};
+
 CoreAudio::CoreAudio()
 {
     UInt32 io_size{};
@@ -40,18 +55,17 @@ CoreAudio::CoreAudio()
         return;
     }
 
-    this->_deviceCount = io_size / sizeof(AudioObjectID);
-    this->_deviceIds.resize(this->_deviceCount);
-    this->_deviceInfo.resize(this->_deviceCount);
-
-    os_err = AudioObjectGetPropertyData(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size, this->_deviceIds.data());
+    auto deviceIds = std::vector<AudioObjectID>();
+    deviceIds.resize(io_size / sizeof(AudioObjectID));
+    os_err = AudioObjectGetPropertyData(kAudioObjectSystemObject, &prop_address, 0, NULL, &io_size, deviceIds.data());
     if (os_err != 0) {
         std::cout << "Error:" << os_err << std::endl;
         return;
     }
 
-    for (int deviceIndex = 0; deviceIndex < this->_deviceCount; ++deviceIndex) {
-    
+    for (auto deviceId : deviceIds) {
+
+        auto deviceInfo = DeviceInfo();
 
         cf::String deviceName;
 
@@ -60,22 +74,40 @@ CoreAudio::CoreAudio()
         prop_address.mElement = kAudioObjectPropertyElementMaster;
         io_size = sizeof(CFStringRef);
 
-        os_err = AudioObjectGetPropertyData(this->_deviceIds[deviceIndex], &prop_address, 0, NULL, &io_size, &deviceName.stringRef);
+        os_err = AudioObjectGetPropertyData(deviceId, &prop_address, 0, NULL, &io_size, &deviceName.stringRef);
         if (os_err != 0) {
             std::cout << "Error:" << os_err << std::endl;
             continue;
         }
-        this->_deviceInfo[deviceIndex].name = deviceName.stdString();
+        deviceInfo.name = deviceName.stdString();
+        this->_deviceInfo.emplace(deviceId, std::move(deviceInfo));
     }
 }
 
 int CoreAudio::countDevices()
 {
-    return this->_deviceCount;
+    return this->_deviceInfo.size();
 }
 
-DeviceInfo* CoreAudio::getDeviceInfo(int index)
+DeviceInfo* CoreAudio::getDeviceInfo(int64_t deviceId)
 {
-    return &this->_deviceInfo[index];
+    auto coreAudioId = CoreAudioIdMap(deviceId);
+
+    auto deviceIterator = this->_deviceInfo.find(coreAudioId.coreAudioCardId);
+    if (deviceIterator == this->_deviceInfo.end()) {
+        return nullptr;
+    }
+
+    return &(*deviceIterator).second;
+}
+
+std::vector<int64_t> CoreAudio::deviceIds()
+{
+    auto ids = std::vector<int64_t>();
+    for (auto& device : this->_deviceInfo) {
+        auto coreAudioId = CoreAudioIdMap(device.first);
+        ids.emplace_back(coreAudioId.deviceId);
+    }
+    return ids;
 }
 }

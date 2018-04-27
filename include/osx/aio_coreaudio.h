@@ -26,6 +26,8 @@
 #include <AudioUnit/AudioUnit.h>
 #include <CoreAudio/CoreAudio.h>
 
+#include <map>
+
 namespace acio {
 
 class CoreAudio : public Audio {
@@ -35,12 +37,11 @@ public:
 
 public:
     int countDevices() override;
-    DeviceInfo* getDeviceInfo(int index) override;
+    DeviceInfo* getDeviceInfo(int64_t deviceId) override;
 
+    std::vector<int64_t> deviceIds() override;
 private:
-    std::vector<DeviceInfo> _deviceInfo;
-    std::vector<AudioObjectID> _deviceIds;
-    int _deviceCount{ 0 };
+    std::map<AudioObjectID, DeviceInfo> _deviceInfo;
 };
 }
 

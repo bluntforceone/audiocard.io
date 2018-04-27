@@ -44,8 +44,15 @@ int Pulse::countDevices()
     return 1;
 }
 
-DeviceInfo* Pulse::getDeviceInfo(int index)
+DeviceInfo* Pulse::getDeviceInfo(int64_t)
 {
     return &this->deviceInfo;
+}
+
+std::vector<int64_t> Pulse::deviceIds()
+{
+    std::vector<int64_t> ids;
+    ids.emplace_back(1);
+    return ids;
 }
 }

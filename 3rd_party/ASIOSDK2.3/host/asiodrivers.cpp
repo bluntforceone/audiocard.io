@@ -111,7 +111,7 @@ long AsioDrivers::getDriverNames(char **names, long maxDrivers)
 	return asioGetNumDev() < maxDrivers ? asioGetNumDev() : maxDrivers;
 }
 
-bool AsioDrivers::loadDriver(char *name)
+bool AsioDrivers::loadDriver(const 	char *name)
 {
 	char dname[64];
 	char curName[64];

@@ -30,7 +30,7 @@ public:
 	
 	bool getCurrentDriverName(char *name);
 	long getDriverNames(char **names, long maxDrivers);
-	bool loadDriver(char *name);
+	bool loadDriver(const char *name);
 	void removeCurrentDriver();
 	long getCurrentDriverIndex() {return curIndex;}
 protected:
